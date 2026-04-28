@@ -10,11 +10,20 @@ if (file_exists(__DIR__ . '/../.env')) {
 
 session_start();
 
-// Set default header
-header('Content-Type: application/json');
-
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// Serve Frontend SPA for non-API routes
+if (strpos($uri, '/api') !== 0 && $uri !== '/health') {
+    if (file_exists(__DIR__ . '/app.html')) {
+        header('Content-Type: text/html');
+        readfile(__DIR__ . '/app.html');
+        exit;
+    }
+}
+
+// Set default header for API
+header('Content-Type: application/json');
 
 // Format: [METHOD, PATH, ControllerClass, method, requireAuth, requireRole]
 $routes = [
