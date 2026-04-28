@@ -38,4 +38,4 @@ EXPOSE 8080
 
 # Jalankan PHP built-in server
 # Pakai shell form (bukan exec form) agar $PORT bisa di-expand
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t public/"]
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t public/ public/index.php"]
