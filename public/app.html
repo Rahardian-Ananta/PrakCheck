@@ -130,6 +130,9 @@
             <div class="auth-switch" onclick="toggleAuthMode()">
                 <span id="auth-switch-text">Belum punya akun? Daftar disini</span>
             </div>
+            <div class="auth-switch" style="margin-top: 0.5rem;" onclick="alert('Fitur reset password via email belum dikonfigurasi. Silakan hubungi Administrator/Koor Asisten.')">
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Lupa Password?</span>
+            </div>
         </div>
     </div>
 
@@ -175,6 +178,37 @@
 
     <!-- DASHBOARD ASPRAK -->
     <div id="view-asprak" class="container hidden">
+        <!-- Section Buat Tugas -->
+        <div class="card" style="background: #eef2ff;">
+            <div class="card-title">Buat Tugas Baru</div>
+            <form id="buat-tugas-form" onsubmit="handleBuatTugas(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Nama Tugas</label>
+                        <input type="text" id="tugas-nama" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ID Kelas (UUID dari database)</label>
+                        <input type="text" id="tugas-kelas-id" placeholder="Contoh: 123e4567-e89b-..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline</label>
+                        <input type="datetime-local" id="tugas-deadline" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Format Diizinkan</label>
+                        <select id="tugas-format">
+                            <option value="both">PDF & DOCX</option>
+                            <option value="pdf">Hanya PDF</option>
+                            <option value="docx">Hanya DOCX</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="width: auto;" id="btn-buat-tugas">Simpan Tugas</button>
+            </form>
+        </div>
+
+        <!-- Section Daftar Tugas -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
                 <div style="font-size: 1.25rem; font-weight: 600;">Manajemen Tugas & Analisis</div>
@@ -206,10 +240,11 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Mahasiswa A</th>
-                            <th>Mahasiswa B</th>
+                            <th>Mhs A</th>
+                            <th>Mhs B</th>
                             <th>Skor Kemiripan</th>
                             <th>Zona</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="table-kemiripan">
@@ -217,6 +252,35 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- Section Beri Nilai -->
+        <div class="card hidden" id="nilai-section" style="background: #fffbeb;">
+            <div class="card-title">Penilaian Laporan</div>
+            <form id="nilai-form" onsubmit="handleBeriNilai(event)">
+                <input type="hidden" id="nilai-laporan-id">
+                <div class="form-group">
+                    <label>Laporan ID</label>
+                    <input type="text" id="nilai-laporan-display" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Nilai (0-100)</label>
+                    <input type="number" id="nilai-angka" min="0" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="nilai-plagiat"> Tandai sebagai Plagiat (Nilai otomatis 0)
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Catatan Opsional</label>
+                    <input type="text" id="nilai-catatan">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" style="width: auto;" id="btn-submit-nilai">Simpan Nilai</button>
+                    <button type="button" class="btn-outline" onclick="document.getElementById('nilai-section').classList.add('hidden')">Tutup</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -423,14 +487,16 @@
                         const tr = document.createElement('tr');
                         const statusBadge = t.status === 'open' ? 'badge open' : (t.status === 'closed' ? 'badge closed' : 'badge analyzed');
                         tr.innerHTML = `
-                            <td><strong>${t.nama_tugas}</strong></td>
+                            <td><strong>${t.nama_tugas}</strong><br><small>Kelas ID: ${t.kelas_id}</small></td>
                             <td>${new Date(t.deadline).toLocaleString()}</td>
                             <td><span class="${statusBadge}">${t.status.toUpperCase()}</span></td>
-                            <td style="display:flex; gap:0.5rem">
+                            <td style="display:flex; gap:0.5rem; flex-wrap: wrap;">
                                 <button class="btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
-                                    onclick="triggerAnalisis('${t.id}')">Analisis</button>
+                                    onclick="triggerAnalisis('${t.id}')">Analisis CS</button>
                                 <button class="btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
-                                    onclick="lihatKemiripan('${t.id}')">Lihat Hasil</button>
+                                    onclick="lihatKemiripan('${t.id}')">Lihat Kemiripan</button>
+                                <button class="btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
+                                    onclick="window.open('/api/nilai/export?kelas_id=${t.kelas_id}')">Export Nilai</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -440,6 +506,42 @@
                 }
             } catch (err) {
                 showAlert('asprak-alert', 'Gagal memuat tugas');
+            }
+        };
+
+        const handleBuatTugas = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-buat-tugas');
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            const payload = {
+                nama_tugas: document.getElementById('tugas-nama').value,
+                kelas_id: document.getElementById('tugas-kelas-id').value,
+                deadline: document.getElementById('tugas-deadline').value,
+                format_diizinkan: document.getElementById('tugas-format').value
+            };
+
+            try {
+                const res = await fetch('/api/tugas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showAlert('asprak-alert', 'Tugas berhasil dibuat!', 'success');
+                    document.getElementById('buat-tugas-form').reset();
+                    loadTugasAsprak();
+                } else {
+                    showAlert('asprak-alert', data.error || 'Gagal membuat tugas');
+                }
+            } catch (err) {
+                showAlert('asprak-alert', 'Kesalahan koneksi');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Simpan Tugas';
             }
         };
 
@@ -461,12 +563,80 @@
 
         const lihatKemiripan = async (tugasId) => {
             document.getElementById('hasil-section').classList.remove('hidden');
+            const tbody = document.getElementById('table-kemiripan');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Memuat data...</td></tr>';
+            
             try {
-                // Catatan: Karena kita butuh modifikasi endpoint untuk filter tugas_id di kemiripan
-                // ini sekedar placeholder. API Kemiripan GET belum difilter di instruksi, jadi akan error jika datanya kompleks.
-                const tbody = document.getElementById('table-kemiripan');
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Data siap ditampilkan dari API...</td></tr>';
-            } catch (e) {}
+                const res = await fetch('/api/kemiripan'); // Note: The PHP controller currently doesn't filter by tugas_id directly without DB changes, assuming it returns all for the asprak for now.
+                const data = await res.json();
+                
+                tbody.innerHTML = '';
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(k => {
+                        const tr = document.createElement('tr');
+                        const skor = (k.skor_kemiripan * 100).toFixed(2);
+                        const zonaColor = k.zona === 'merah' ? 'var(--danger)' : (k.zona === 'kuning' ? '#f59e0b' : 'var(--success)');
+                        tr.innerHTML = `
+                            <td>${k.mahasiswa_id_a.substring(0,8)}...</td>
+                            <td>${k.mahasiswa_id_b.substring(0,8)}...</td>
+                            <td><strong>${skor}%</strong></td>
+                            <td style="color:${zonaColor}; font-weight:bold;">${k.zona.toUpperCase()}</td>
+                            <td>
+                                <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="openNilai('${k.laporan_id_a}')">Beri Nilai Mhs A</button>
+                                <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="openNilai('${k.laporan_id_b}')">Beri Nilai Mhs B</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Belum ada data kemiripan</td></tr>';
+                }
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Gagal memuat data.</td></tr>';
+            }
+        };
+
+        const openNilai = (laporanId) => {
+            document.getElementById('nilai-section').classList.remove('hidden');
+            document.getElementById('nilai-laporan-id').value = laporanId;
+            document.getElementById('nilai-laporan-display').value = laporanId;
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        };
+
+        const handleBeriNilai = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-nilai');
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            const payload = {
+                laporan_id: document.getElementById('nilai-laporan-id').value,
+                nilai: document.getElementById('nilai-angka').value,
+                is_plagiat: document.getElementById('nilai-plagiat').checked,
+                catatan: document.getElementById('nilai-catatan').value
+            };
+
+            try {
+                const res = await fetch('/api/nilai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showAlert('asprak-alert', 'Nilai berhasil disimpan!', 'success');
+                    document.getElementById('nilai-form').reset();
+                    document.getElementById('nilai-section').classList.add('hidden');
+                } else {
+                    showAlert('asprak-alert', data.error || 'Gagal menyimpan nilai');
+                }
+            } catch (err) {
+                showAlert('asprak-alert', 'Kesalahan koneksi');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Simpan Nilai';
+            }
         };
     </script>
 </body>
