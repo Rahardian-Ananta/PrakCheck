@@ -27,11 +27,14 @@ WORKDIR /app
 # Copy composer files dulu (untuk cache layer)
 COPY composer.json ./
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+# Install dependencies (tanpa generate autoload dulu, karena src/ belum ada)
+RUN composer install --no-dev --no-scripts --no-interaction
 
 # Copy seluruh project
 COPY . .
+
+# Generate autoload SETELAH src/ tersedia
+RUN composer dump-autoload --optimize --no-interaction
 
 # Expose port
 EXPOSE 8080
