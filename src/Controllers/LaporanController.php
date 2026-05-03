@@ -23,13 +23,18 @@ class LaporanController {
                 return;
             }
 
-            // STEP 2 — Cek file ada
-            if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+// STEP 2 — Cek apakah ada file ATAU submit tanpa file (tanpa lampiran)
+            $hasFile = isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK;
+            $submitType = $_POST['submit_type'] ?? 'upload'; // 'upload' atau 'selesai'
+            
+            //Kalau kosong semua berarti invalid
+            if (!$hasFile && $submitType !== 'selesai') {
+                // User submit tanpa file dan bukan mode "selesai"
                 http_response_code(400);
-                echo json_encode(["error" => "File tidak ditemukan atau gagal diupload"]);
+                echo json_encode(["error" => "Pilih file untuk diupload atau klik 'Selesai tanpa file'"]);
                 return;
             }
-
+            
             $supabase = SupabaseClient::getInstance();
 
             // STEP 3 — Ambil data tugas
@@ -63,75 +68,56 @@ class LaporanController {
             
             // 4a. DEADLINE
             if (time() > strtotime($tugas['deadline'])) {
-                $supabase->insert('laporan', [
-                    'mahasiswa_id' => $mahasiswaId,
-                    'tugas_id'     => $tugasId,
-                    'file_name'    => $_FILES['file']['name'],
-                    'file_path'    => '',
-                    'file_size_kb' => 0,
-                    'file_type'    => 'pdf',
-                    'status'       => 'ditolak',
-                    'alasan_tolak' => 'terlambat'
-                ]);
-                
-                $supabase->insert('notifikasi', [
-                    'user_id' => $mahasiswaId,
-                    'judul'   => 'Laporan Ditolak',
-                    'pesan'   => 'Laporan kamu untuk "' . $tugas['nama_tugas'] . '" ditolak: pengumpulan sudah terlambat',
-                    'tipe'    => 'laporan_ditolak'
-                ]);
-                
-                http_response_code(422);
-                echo json_encode(["error" => "Batas waktu sudah lewat", "alasan" => "terlambat"]);
-                return;
+                // Jika ada file, catat sebagai terlambat; jika tidak ada file tetap bisa submit tanpa file
+                if ($hasFile) {
+                    $supabase->insert('laporan', [
+                        'mahasiswa_id' => $mahasiswaId,
+                        'tugas_id'     => $tugasId,
+                        'file_name'    => $_FILES['file']['name'],
+                        'file_path'    => '',
+                        'file_size_kb' => 0,
+                        'file_type'    => 'pdf',
+                        'status'       => 'ditolak',
+                        'alasan_tolak' => 'terlambat'
+                    ]);
+                    
+                    $supabase->insert('notifikasi', [
+                        'user_id' => $mahasiswaId,
+                        'judul'   => 'Laporan Ditolak',
+                        'pesan'   => 'Laporan kamu untuk "' . $tugas['nama_tugas'] . '" ditolak: pengumpulan sudah terlambat',
+                        'tipe'    => 'laporan_ditolak'
+                    ]);
+                    
+                    http_response_code(422);
+                    echo json_encode(["error" => "Batas waktu sudah lewat", "alasan" => "terlambat"]);
+                    return;
+                } else {
+                    // Submit tanpa file tapi deadline sudah lewat - bisa dianggap selesai tanpa nilai
+                    $laporanResult = $supabase->insert('laporan', [
+                        'mahasiswa_id' => $mahasiswaId,
+                        'tugas_id'     => $tugasId,
+                        'file_name'    => '[Tanpa File]',
+                        'file_path'    => '',
+                        'file_size_kb' => 0,
+                        'file_type'    => 'tanpa',
+                        'status'       => 'diterima'
+                    ]);
+                    
+                    $supabase->insert('notifikasi', [
+                        'user_id' => $mahasiswaId,
+                        'judul'   => 'Laporan Diterima',
+                        'pesan'   => 'Laporanmu untuk "' . $tugas['nama_tugas'] . '" diterima (tanpa file)',
+                        'tipe'    => 'laporan_diterima'
+                    ]);
+                    
+                    http_response_code(201);
+                    echo json_encode(["message" => "Tugas ditandai selesai tanpa upload file", "data" => isset($laporanResult[0]) ? $laporanResult[0] : $laporanResult]);
+return;
+                }
             }
-
-            // 4b. FORMAT FILE
-            $originalName = $_FILES['file']['name'];
-            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-            $mime = mime_content_type($_FILES['file']['tmp_name']);
             
-            $formatValid = false;
-            $fileType = $ext ?: 'pdf'; // Fallback
-            
-            if ($ext === 'pdf' && $mime === 'application/pdf') {
-                $fileType = 'pdf';
-                $formatValid = ($tugas['format_diizinkan'] === 'pdf' || $tugas['format_diizinkan'] === 'both');
-            } elseif ($ext === 'docx' && strpos($mime, 'wordprocessingml') !== false) {
-                $fileType = 'docx';
-                $formatValid = ($tugas['format_diizinkan'] === 'docx' || $tugas['format_diizinkan'] === 'both');
-            }
-            
-            if (!$formatValid) {
-                $supabase->insert('laporan', [
-                    'mahasiswa_id' => $mahasiswaId,
-                    'tugas_id'     => $tugasId,
-                    'file_name'    => $originalName,
-                    'file_path'    => '',
-                    'file_size_kb' => 0,
-                    'file_type'    => $fileType,
-                    'status'       => 'ditolak',
-                    'alasan_tolak' => 'format_salah'
-                ]);
-                
-                $supabase->insert('notifikasi', [
-                    'user_id' => $mahasiswaId,
-                    'judul'   => 'Laporan Ditolak',
-                    'pesan'   => 'Laporan kamu untuk "' . $tugas['nama_tugas'] . '" ditolak: format file tidak diizinkan. Format yang diterima: ' . $tugas['format_diizinkan'],
-                    'tipe'    => 'laporan_ditolak'
-                ]);
-                
-                http_response_code(422);
-                echo json_encode([
-                    "error" => "Format file tidak diizinkan",
-                    "alasan" => "format_salah",
-                    "format_diterima" => $tugas['format_diizinkan']
-                ]);
-                return;
-            }
-
-            // 4c. NAMA FILE
-            if (!empty($tugas['konvensi_regex'])) {
+            // 4c. NAMA FILE (hanya jika ada file)
+            if ($hasFile && !empty($tugas['konvensi_regex'])) {
                 if (!preg_match('/' . $tugas['konvensi_regex'] . '/', $originalName)) {
                     $supabase->insert('laporan', [
                         'mahasiswa_id' => $mahasiswaId,
@@ -161,22 +147,24 @@ class LaporanController {
                 }
             }
 
-            // 4d. DUPLIKAT
-            $existing = $supabase->select('laporan', [
-                'mahasiswa_id' => 'eq.' . $mahasiswaId,
-                'tugas_id'     => 'eq.' . $tugasId,
-                'status'       => 'neq.ditolak'
-            ]);
-            if (count($existing) > 0) {
-                http_response_code(422);
-                echo json_encode([
-                    "error" => "Kamu sudah mengumpulkan laporan untuk tugas ini",
-                    "alasan" => "duplikat"
+// 4d. DUPLIKAT (hanya jika ada file)
+            if ($hasFile) {
+                $existing = $supabase->select('laporan', [
+                    'mahasiswa_id' => 'eq.' . $mahasiswaId,
+                    'tugas_id'     => 'eq.' . $tugasId,
+                    'status'       => 'neq.ditolak'
                 ]);
-                return;
+                if (count($existing) > 0) {
+                    http_response_code(422);
+                    echo json_encode([
+                        "error" => "Kamu sudah mengumpulkan laporan untuk tugas ini",
+                        "alasan" => "duplikat"
+                    ]);
+                    return;
+                }
             }
-
-            // 4e. UKURAN FILE
+            
+            // 4e. UKURAN FILE (hanya jika ada file)
             $maxBytes = $tugas['max_ukuran_mb'] * 1024 * 1024;
             if ($_FILES['file']['size'] > $maxBytes) {
                 http_response_code(422);
@@ -405,13 +393,13 @@ class LaporanController {
                 return;
             }
 
-            // Hapus file dari storage jika ada
+            // Hapus file dari storage jika ada (tapi simpan record untuk tracibility)
             if (!empty($laporan['file_path'])) {
                 $supabase->deleteFile('laporan-files', $laporan['file_path']);
             }
 
-            // Hapus laporan dari database
-            $result = $supabase->delete('laporan', ['id' => 'eq.' . $id]);
+            // Ubah status menjadi dicancel (tidak jadi hapus record untuk tracibility)
+            $result = $supabase->update('laporan', ['status' => 'dicancel'], ['id' => 'eq.' . $id]);
 
             if ($result === false) {
                 http_response_code(500);
@@ -434,6 +422,58 @@ class LaporanController {
             http_response_code(500);
             echo json_encode(["error" => "Terjadi kesalahan sistem"]);
             error_log("LaporanController::cancel Exception: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus laporan permanen (bukan cancel)
+     */
+    public function destroy(string $id): void {
+        try {
+            $user = AuthMiddleware::requireRole('mahasiswa');
+            $supabase = SupabaseClient::getInstance();
+            
+            $laporanList = $supabase->select('laporan', [
+                'id' => 'eq.' . $id,
+                'mahasiswa_id' => 'eq.' . $user['user_id']
+            ]);
+            
+            if (empty($laporanList)) {
+                http_response_code(404);
+                echo json_encode(["error" => "Laporan tidak ditemukan"]);
+                return;
+            }
+            
+            $laporan = $laporanList[0];
+            
+            // Cek apakah sudah dinilai
+            if ($laporan['status'] === 'dinilai') {
+                http_response_code(422);
+                echo json_encode(["error" => "Laporan yang sudah dinilai tidak bisa dihapus"]);
+                return;
+            }
+            
+            // Hapus file dari storage
+            if (!empty($laporan['file_path'])) {
+                $supabase->deleteFile('laporan-files', $laporan['file_path']);
+            }
+            
+            // Hapus permanen dari database
+            $result = $supabase->delete('laporan', ['id' => 'eq.' . $id]);
+            
+            if ($result === false) {
+                http_response_code(500);
+                echo json_encode(["error" => "Gagal menghapus laporan"]);
+                return;
+            }
+            
+            http_response_code(200);
+            echo json_encode(["message" => "Laporan dihapus"]);
+            
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+            error_log("LaporanController::destroy Exception: " . $e->getMessage());
         }
     }
 }

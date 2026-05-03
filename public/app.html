@@ -467,9 +467,10 @@
                 <p class="text-sm text-muted mb-4" id="upload-tugas-nama"></p>
                 <div class="form-group">
                     <label>File PDF/DOCX</label>
-                    <input type="file" id="upload-file" accept=".pdf,.docx" required>
+                    <input type="file" id="upload-file" accept=".pdf,.docx">
                 </div>
                 <button type="submit" class="btn btn-primary w-full">Kirim</button>
+                <button type="button" class="btn w-full mt-2" onclick="submitTanpaFile()">✓ Tandai Selesai (tanpa file)</button>
             </form>
         </div>
     </div>
@@ -746,11 +747,18 @@ const loadMhsTugas = async () => {
                 } else if (lap.status === 'diterima') {
                     statusBadge = 'badge-success';
                     statusText = `Dikumpulkan: ${lap.file_name}`;
-                    uploadBtn = `<button class="btn btn-sm" disabled>✓ Terkirim</button>`;
-                } else if (lap.status === 'ditolak') {
+                    const canCancel = !isClosed && lap.file_path;
+                    uploadBtn = canCancel ? 
+                        `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation();batalkanLaporan('${lap.id}')">Batal</button>` +
+                        `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();hapusLaporan('${lap.id}')">Hapus</button>` :
+                        `<button class="btn btn-sm" disabled>✓ Terkirim</button>`;
+} else if (lap.status === 'ditolak') {
                     statusBadge = 'badge-danger';
                     statusText = `Dikembalikan: ${lap.file_name}`;
-                    uploadBtn = `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation();openUpload('${t.id}','${t.nama_tugas}')">Upload Ulang</button>`;
+                    uploadBtn = !isClosed ? 
+                        `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openUpload('${t.id}','${t.nama_tugas}')">Upload Ulang</button>` +
+                        `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();hapusLaporan('${lap.id}')">Hapus</button>` :
+                        `<button class="btn btn-sm" disabled>✓ Tutup</button>`;
                 } else if (lap.status === 'dicancel') {
                     statusBadge = 'badge-muted';
                     statusText = 'Aktif';
@@ -1108,11 +1116,15 @@ const loadMhsTugas = async () => {
             showModal('modal-upload');
         };
 
-        const uploadLaporan = async (e) => {
+const uploadLaporan = async (e) => {
             e.preventDefault();
             const formData = new FormData();
             formData.append('tugas_id', document.getElementById('upload-tugas-id').value);
-            formData.append('file', document.getElementById('upload-file').files[0]);
+            
+            const fileInput = document.getElementById('upload-file');
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            }
             
             const res = await fetch('/api/laporan/upload', {method:'POST', body:formData});
             const data = await res.json();
@@ -1124,7 +1136,23 @@ const loadMhsTugas = async () => {
                 alert(data.error || 'Gagal');
             }
         };
-
+        
+        const submitTanpaFile = async () => {
+            const formData = new FormData();
+            formData.append('tugas_id', document.getElementById('upload-tugas-id').value);
+            formData.append('submit_type', 'selesai');
+            
+            const res = await fetch('/api/laporan/upload', {method:'POST', body:formData});
+            const data = await res.json();
+            if (res.ok) {
+                alert('Tugas ditandai selesai!');
+                hideModal('modal-upload');
+                loadMhsTugas();
+            } else {
+                alert(data.error || 'Gagal');
+            }
+        };
+        
         const cekLaporan = async (tugasId) => {
             const res = await fetch(`/api/laporan?tugas_id=${tugasId}`);
             const data = await res.json();
@@ -1140,15 +1168,30 @@ const loadMhsTugas = async () => {
             }
         };
 
-        const cancelLaporan = async (id) => {
-            if (!confirm('Batalkan laporan?')) return;
+const cancelLaporan = async (id) => {
+            if (!confirm('Batalkan laporan? File akan dihapus dari storage.')) return;
             const res = await fetch(`/api/laporan/${id}/cancel`, {method:'POST'});
             if (res.ok) {
                 alert('Dibatalkan!');
                 loadMhsTugas();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Gagal');
             }
         };
-
+        
+        const hapusLaporan = async (id) => {
+            if (!confirm('Hapus laporan permanen? Ini tidak bisa dikembalikan.')) return;
+            const res = await fetch(`/api/laporan/${id}`, {method:'DELETE'});
+            if (res.ok) {
+                alert('Dihapus!');
+                loadMhsTugas();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Gagal');
+            }
+        };
+        
         const submitNilai = async (e) => {
             e.preventDefault();
             const res = await fetch('/api/nilai', {
