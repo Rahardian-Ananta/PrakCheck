@@ -125,12 +125,19 @@ class MateriController {
                 $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
                 $mime = mime_content_type($file['tmp_name']);
 
-                // Validasi tipe file
-                $allowedTypes = ['pdf' => 'application/pdf', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png'];
-
-                if (!isset($allowedTypes[$ext]) || $mime !== $allowedTypes[$ext]) {
+// Validasi tipe file
+                $allowedTypes = [
+                    'pdf' => 'application/pdf',
+                    'jpg' => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png' => 'image/png',
+                    'doc' => 'application/msword',
+                    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ];
+                
+                if (!isset($allowedTypes[$ext])) {
                     http_response_code(422);
-                    echo json_encode(["error" => "Format file tidak diizinkan. Hanya PDF, JPG, PNG"]);
+                    echo json_encode(["error" => "Format file tidak diizinkan. Hanya PDF, JPG, PNG, DOC, DOCX"]);
                     return;
                 }
 
@@ -310,6 +317,56 @@ class MateriController {
             http_response_code(500);
             echo json_encode(["error" => "Terjadi kesalahan sistem"]);
             error_log("MateriController::destroy Exception: " . $e->getMessage());
+        }
+    }
+
+    public function downloadLampiran(string $id): void {
+        try {
+            AuthMiddleware::check();
+            $supabase = SupabaseClient::getInstance();
+            
+            $materiList = $supabase->select('materi', ['id' => 'eq.' . $id]);
+            if (empty($materiList)) {
+                http_response_code(404);
+                echo json_encode(["error" => "Materi tidak ditemukan"]);
+                return;
+            }
+            
+            $materi = $materiList[0];
+            
+            if (empty($materi['lampiran_path'])) {
+                http_response_code(404);
+                echo json_encode(["error" => "Tidak ada lampiran"]);
+                return;
+            }
+            
+            $fileContent = $supabase->downloadFile('materi-files', $materi['lampiran_path']);
+            if ($fileContent === false) {
+                http_response_code(500);
+                echo json_encode(["error" => "Gagal download lampiran"]);
+                return;
+            }
+            
+            $ext = strtolower(pathinfo($materi['lampiran_name'], PATHINFO_EXTENSION));
+            $mimeTypes = [
+                'pdf' => 'application/pdf',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'doc' => 'application/msword',
+                'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
+            
+            header('Content-Type: ' . $mime);
+            header('Content-Disposition: attachment; filename="' . $materi['lampiran_name'] . '"');
+            header('Content-Length: ' . strlen($fileContent));
+            echo $fileContent;
+            
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+            error_log("MateriController::downloadLampiran Exception: " . $e->getMessage());
         }
     }
 }

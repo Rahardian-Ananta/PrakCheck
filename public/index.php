@@ -73,6 +73,7 @@ $routes = [
     ['POST',   '/api/materi',              \App\Controllers\MateriController::class,          'create',      true,  'asprak'],
     ['PUT',    '/api/materi/{id}',         \App\Controllers\MateriController::class,          'update',      true,  'asprak'],
     ['DELETE', '/api/materi/{id}',         \App\Controllers\MateriController::class,          'destroy',     true,  'asprak'],
+    ['GET',    '/api/materi/{id}/lampiran', \App\Controllers\MateriController::class,        'downloadLampiran', true,  null],
     
     // Notifikasi
     ['GET',    '/api/notifikasi',          \App\Controllers\NotifikasiController::class,      'index',       true,  null],
