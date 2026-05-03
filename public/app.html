@@ -677,14 +677,14 @@
             
             if (data.data && data.data.length > 0) {
                 container.innerHTML = data.data.map(p => {
-                    const hasLamp = p.lampiran_name ? 
-                        `<div class="mt-2"><a href="/api/materi/${p.id}/lampiran" target="_blank" style="color:var(--primary);">📎 ${p.lampiran_name}</a></div>` : '';
+                    const lampUrl = p.lampiran_signed_url ? p.lampiran_signed_url : `/api/materi/${p.id}/lampiran`;
+                    const lampHtml = p.lampiran_name ? renderLampiran(p.lampiran_name, lampUrl) : '';
                     return `
                         <div class="item">
                             <div class="item-title">${p.judul}</div>
                             <div class="item-meta">${new Date(p.publish_at).toLocaleDateString('id-ID')}</div>
                             <div class="text-sm mt-4" style="white-space:pre-wrap;">${p.isi}</div>
-                            ${hasLamp}
+                            ${lampHtml}
                         </div>
                     `;
                 }).join('');
@@ -769,8 +769,8 @@ const loadMhsTugas = async () => {
                     uploadBtn = `<button class="btn btn-sm" disabled>✓ Terkirim</button>`;
                 }
                 
-                const hasLampiran = t.lampiran_name ? 
-                    `<div class="mt-2"><a href="/api/tugas/${t.id}/lampiran" target="_blank" style="color:var(--primary);" onclick="event.stopPropagation();">📎 ${t.lampiran_name}</a></div>` : '';
+                const lampUrl = t.lampiran_signed_url ? t.lampiran_signed_url : `/api/tugas/${t.id}/lampiran`;
+                const hasLampiran = t.lampiran_name ? renderLampiran(t.lampiran_name, lampUrl) : '';
                 
                 return `
                     <div class="item">
