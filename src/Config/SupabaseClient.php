@@ -152,7 +152,11 @@ class SupabaseClient {
                 return false;
             }
             
-            $endpoint = "/storage/v1/object/{$bucket}/{$storagePath}";
+            // URL-encode each path segment (preserve slashes) to handle spaces and special chars
+            $parts = explode('/', $storagePath);
+            $encodedParts = array_map('rawurlencode', $parts);
+            $encPath = implode('/', $encodedParts);
+            $endpoint = "/storage/v1/object/{$bucket}/{$encPath}";
             $headers = ["Content-Type: {$mimeType}"];
             
             $res = $this->request('POST', $endpoint, $content, $headers);
@@ -178,7 +182,10 @@ class SupabaseClient {
      */
     public function downloadFile(string $bucket, string $storagePath): string|false {
         try {
-            $endpoint = "/storage/v1/object/{$bucket}/{$storagePath}";
+            $parts = explode('/', $storagePath);
+            $encodedParts = array_map('rawurlencode', $parts);
+            $encPath = implode('/', $encodedParts);
+            $endpoint = "/storage/v1/object/{$bucket}/{$encPath}";
             
             $res = $this->request('GET', $endpoint);
             
@@ -209,7 +216,10 @@ class SupabaseClient {
      */
     public function getSignedUrl(string $bucket, string $storagePath, int $expiresIn = 3600): string|false {
         try {
-            $endpoint = "/storage/v1/object/sign/{$bucket}/{$storagePath}";
+            $parts = explode('/', $storagePath);
+            $encodedParts = array_map('rawurlencode', $parts);
+            $encPath = implode('/', $encodedParts);
+            $endpoint = "/storage/v1/object/sign/{$bucket}/{$encPath}";
             $body = ["expiresIn" => $expiresIn];
             
             $res = $this->request('POST', $endpoint, $body);
