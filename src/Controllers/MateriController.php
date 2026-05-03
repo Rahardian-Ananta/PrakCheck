@@ -359,7 +359,12 @@ class MateriController {
             $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
             
             header('Content-Type: ' . $mime);
-            header('Content-Disposition: attachment; filename="' . $materi['lampiran_name'] . '"');
+            $inlineTypes = ['image/jpeg','image/png','application/pdf'];
+            if (in_array($mime, $inlineTypes)) {
+                header('Content-Disposition: inline; filename="' . $materi['lampiran_name'] . '"');
+            } else {
+                header('Content-Disposition: attachment; filename="' . $materi['lampiran_name'] . '"');
+            }
             header('Content-Length: ' . strlen($fileContent));
             echo $fileContent;
             

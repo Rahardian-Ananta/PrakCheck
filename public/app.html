@@ -930,7 +930,8 @@ const loadMhsTugas = async () => {
                 return `<div class="mt-2"><a href="${url}" target="_blank" onclick="event.stopPropagation();"><img src="${url}" alt="${name}" style="max-width:200px;display:block;border-radius:6px"/></a><div class="text-sm" style="color:var(--primary);">${name}</div></div>`;
             }
             if (ext === 'pdf') {
-                return `<div class="mt-2"><a href="${url}" target="_blank" onclick="event.stopPropagation();" style="color:var(--primary);">📄 ${name}</a></div>`;
+                // embed PDF inline with small iframe preview
+                return `<div class="mt-2"><iframe src="${url}" style="width:100%;max-width:420px;height:300px;border:1px solid #eee;border-radius:6px"></iframe><div class="text-sm" style="color:var(--primary);">${name}</div></div>`;
             }
             // fallback: show file link
             return `<div class="mt-2"><a href="${url}" target="_blank" onclick="event.stopPropagation();" style="color:var(--primary);">📎 ${name}</a></div>`;

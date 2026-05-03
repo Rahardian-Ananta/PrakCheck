@@ -324,7 +324,13 @@ class TugasController {
             $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
             
             header('Content-Type: ' . $mime);
-            header('Content-Disposition: attachment; filename="' . $tugas['lampiran_name'] . '"');
+            // Untuk image/pdf kita sajikan inline supaya <img> atau <iframe> dapat menampilkannya
+            $inlineTypes = ['image/jpeg','image/png','application/pdf'];
+            if (in_array($mime, $inlineTypes)) {
+                header('Content-Disposition: inline; filename="' . $tugas['lampiran_name'] . '"');
+            } else {
+                header('Content-Disposition: attachment; filename="' . $tugas['lampiran_name'] . '"');
+            }
             header('Content-Length: ' . strlen($fileContent));
             echo $fileContent;
             
