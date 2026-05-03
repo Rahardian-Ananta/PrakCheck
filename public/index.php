@@ -38,6 +38,7 @@ $routes = [
     // Kelas
     ['GET',    '/api/kelas',               \App\Controllers\KelasController::class,           'index',       true,  null],
     ['POST',   '/api/kelas',               \App\Controllers\KelasController::class,           'create',      true,  'asprak'],
+    ['GET',    '/api/kelas/{id}',          \App\Controllers\KelasController::class,           'show',        true,  null],
     ['POST',   '/api/kelas/join',          \App\Controllers\KelasController::class,           'join',        true,  'mahasiswa'],
 
     // Tugas

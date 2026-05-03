@@ -52,14 +52,15 @@ class KelasController {
 
     /**
      * Membuat kelas baru (khusus asprak)
+     * kode_kelas akan digenerate otomatis
      */
     public function create(): void {
         try {
             $user = AuthMiddleware::requireRole('asprak');
             $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-
+            
             // Validasi field wajib
-            $required = ['nama_kelas', 'kode_kelas', 'mata_kuliah', 'semester', 'tahun_ajaran'];
+            $required = ['nama_kelas', 'mata_kuliah', 'semester', 'tahun_ajaran'];
             foreach ($required as $field) {
                 if (empty($data[$field])) {
                     http_response_code(400);
@@ -67,46 +68,116 @@ class KelasController {
                     return;
                 }
             }
-
+            
             $supabase = SupabaseClient::getInstance();
-
-            // Cek duplikat kode_kelas
-            $existing = $supabase->select('kelas', ['kode_kelas' => 'eq.' . $data['kode_kelas']]);
-            if (!empty($existing)) {
-                http_response_code(409);
-                echo json_encode(["error" => "Kode kelas sudah digunakan"]);
-                return;
-            }
-
+            
+            // Generate kode_kelas otomatis
+            $kodeKelas = $this->generateKodeKelas($data['mata_kuliah'], $data['tahun_ajaran']);
+            
             // Insert kelas baru
             $insertData = [
                 'asprak_id' => $user['user_id'],
                 'nama_kelas' => $data['nama_kelas'],
-                'kode_kelas' => $data['kode_kelas'],
+                'kode_kelas' => $kodeKelas,
                 'mata_kuliah' => $data['mata_kuliah'],
                 'semester' => $data['semester'],
                 'tahun_ajaran' => $data['tahun_ajaran'],
                 'is_active' => true
             ];
-
+            
             $result = $supabase->insert('kelas', $insertData);
-
+            
             if ($result === false) {
                 http_response_code(500);
                 echo json_encode(["error" => "Gagal membuat kelas"]);
                 return;
             }
-
+            
             http_response_code(201);
             echo json_encode([
                 "message" => "Kelas berhasil dibuat",
                 "data" => isset($result[0]) ? $result[0] : $result
             ]);
-
+            
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(["error" => "Terjadi kesalahan sistem"]);
             error_log("KelasController::create Exception: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Generate kode kelas otomatis
+     * Format: {3 huruf matkul}-{tahun}-{4 random chars}
+     * Contoh: ALG-2025-X7K2
+     */
+    private function generateKodeKelas(string $mataKuliah, string $tahunAjaran): string {
+        $supabase = SupabaseClient::getInstance();
+        
+        // Ambil 3 huruf pertama dari mata kuliah (kapital)
+        $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $mataKuliah), 0, 3));
+        if (strlen($prefix) < 3) {
+            $prefix = str_pad($prefix, 3, 'X');
+        }
+        
+        // Ambil tahun dari tahun_ajaran
+        $tahun = explode('/', $tahunAjaran)[0] ?? date('Y');
+        
+        // Generate unique kode
+        do {
+            $random = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
+            $kode = "{$prefix}-{$tahun}-{$random}";
+            
+            $existing = $supabase->select('kelas', ['kode_kelas' => 'eq.' . $kode]);
+        } while (!empty($existing));
+        
+        return $kode;
+    }
+    
+    /**
+     * Menampilkan detail kelas berdasarkan ID
+     */
+    public function show(string $id): void {
+        try {
+            $user = AuthMiddleware::check();
+            $supabase = SupabaseClient::getInstance();
+            
+            // Ambil data kelas
+            $kelasList = $supabase->select('kelas', ['id' => 'eq.' . $id]);
+            if (empty($kelasList)) {
+                http_response_code(404);
+                echo json_encode(["error" => "Kelas tidak ditemukan"]);
+                return;
+            }
+            
+            $kelas = $kelasList[0];
+            
+            // Cek akses: asprak pemilik atau mahasiswa yang join
+            if ($user['role'] === 'asprak') {
+                if ($kelas['asprak_id'] !== $user['user_id']) {
+                    http_response_code(403);
+                    echo json_encode(["error" => "Akses ditolak"]);
+                    return;
+                }
+            } else {
+                $joined = $supabase->select('kelas_mahasiswa', [
+                    'kelas_id' => 'eq.' . $id,
+                    'mahasiswa_id' => 'eq.' . $user['user_id']
+                ]);
+                if (empty($joined)) {
+                    http_response_code(403);
+                    echo json_encode(["error" => "Anda belum bergabung di kelas ini"]);
+                    return;
+                }
+            }
+            
+            http_response_code(200);
+            echo json_encode(["data" => $kelas]);
+            
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+            error_log("KelasController::show Exception: " . $e->getMessage());
         }
     }
 
