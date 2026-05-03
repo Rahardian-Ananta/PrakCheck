@@ -66,6 +66,14 @@ class LaporanController {
 
             // STEP 4 — Validasi file (berurutan)
             
+            // Jika ada file, siapkan metadata yang diperlukan
+            if ($hasFile) {
+                $originalName = $_FILES['file']['name'];
+                $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                $mime = mime_content_type($_FILES['file']['tmp_name']);
+                $fileType = $ext ?: 'pdf';
+            }
+
             // 4a. DEADLINE
             if (time() > strtotime($tugas['deadline'])) {
                 // Jika ada file, catat sebagai terlambat; jika tidak ada file tetap bisa submit tanpa file
@@ -165,42 +173,46 @@ return;
             }
             
             // 4e. UKURAN FILE (hanya jika ada file)
-            $maxBytes = $tugas['max_ukuran_mb'] * 1024 * 1024;
-            if ($_FILES['file']['size'] > $maxBytes) {
+            if ($hasFile) {
+                $maxBytes = $tugas['max_ukuran_mb'] * 1024 * 1024;
+                if ($_FILES['file']['size'] > $maxBytes) {
                 http_response_code(422);
                 echo json_encode([
                     "error" => "Ukuran file melebihi batas " . $tugas['max_ukuran_mb'] . "MB"
                 ]);
                 return;
             }
-
-            // STEP 5 — Upload dan simpan
-            $kelasId = $tugas['kelas_id'];
-            $storagePath = $kelasId . '/' . $tugasId . '/' . $mahasiswaId . '/' . $originalName;
-            
-            $uploadResult = $supabase->uploadFile('laporan-files', $storagePath, $_FILES['file']['tmp_name'], $mime);
-            if ($uploadResult === false) {
-                $errorMsg = "Gagal upload ke Supabase Storage. ";
-                $errorMsg .= "Cek: 1) Bucket 'laporan-files' sudah dibuat di Supabase? ";
-                $errorMsg .= "2) SUPABASE_SERVICE_KEY benar? ";
-                $errorMsg .= "3) Path: {$storagePath}";
-                error_log("LaporanController::upload - Upload failed: " . $errorMsg);
-                http_response_code(500);
-                echo json_encode(["error" => $errorMsg]);
-                return;
             }
-            
-            $fileSizeKb = (int) ceil($_FILES['file']['size'] / 1024);
-            
-            $laporanResult = $supabase->insert('laporan', [
-                'mahasiswa_id' => $mahasiswaId,
-                'tugas_id'     => $tugasId,
-                'file_name'    => $originalName,
-                'file_path'    => $storagePath,
-                'file_size_kb' => $fileSizeKb,
-                'file_type'    => $fileType,
-                'status'       => 'diterima'
-            ]);
+
+            // STEP 5 — Jika ada file: Upload dan simpan
+            if ($hasFile) {
+                $kelasId = $tugas['kelas_id'];
+                $storagePath = $kelasId . '/' . $tugasId . '/' . $mahasiswaId . '/' . $originalName;
+                
+                $uploadResult = $supabase->uploadFile('laporan-files', $storagePath, $_FILES['file']['tmp_name'], $mime);
+                if ($uploadResult === false) {
+                    $errorMsg = "Gagal upload ke Supabase Storage. ";
+                    $errorMsg .= "Cek: 1) Bucket 'laporan-files' sudah dibuat di Supabase? ";
+                    $errorMsg .= "2) SUPABASE_SERVICE_KEY benar? ";
+                    $errorMsg .= "3) Path: {$storagePath}";
+                    error_log("LaporanController::upload - Upload failed: " . $errorMsg);
+                    http_response_code(500);
+                    echo json_encode(["error" => $errorMsg]);
+                    return;
+                }
+                
+                $fileSizeKb = (int) ceil($_FILES['file']['size'] / 1024);
+                
+                $laporanResult = $supabase->insert('laporan', [
+                    'mahasiswa_id' => $mahasiswaId,
+                    'tugas_id'     => $tugasId,
+                    'file_name'    => $originalName,
+                    'file_path'    => $storagePath,
+                    'file_size_kb' => $fileSizeKb,
+                    'file_type'    => $fileType,
+                    'status'       => 'diterima'
+                ]);
+            }
             
             $laporan = isset($laporanResult[0]) ? $laporanResult[0] : $laporanResult;
             
@@ -393,12 +405,7 @@ return;
                 return;
             }
 
-            // Hapus file dari storage jika ada (tapi simpan record untuk tracibility)
-            if (!empty($laporan['file_path'])) {
-                $supabase->deleteFile('laporan-files', $laporan['file_path']);
-            }
-
-            // Ubah status menjadi dicancel (tidak jadi hapus record untuk tracibility)
+            // Jangan hapus file saat batalkan — hanya ubah status jadi 'dicancel'
             $result = $supabase->update('laporan', ['status' => 'dicancel'], ['id' => 'eq.' . $id]);
 
             if ($result === false) {

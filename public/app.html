@@ -749,7 +749,7 @@ const loadMhsTugas = async () => {
                     statusText = `Dikumpulkan: ${lap.file_name}`;
                     const canCancel = !isClosed && lap.file_path;
                     uploadBtn = canCancel ? 
-                        `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation();batalkanLaporan('${lap.id}')">Batal</button>` +
+                        `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation();cancelLaporan('${lap.id}')">Batal</button>` +
                         `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();hapusLaporan('${lap.id}')">Hapus</button>` :
                         `<button class="btn btn-sm" disabled>✓ Terkirim</button>`;
 } else if (lap.status === 'ditolak') {

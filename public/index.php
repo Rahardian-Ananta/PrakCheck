@@ -53,7 +53,7 @@ $routes = [
     ['POST',   '/api/laporan/upload',      \App\Controllers\LaporanController::class,         'upload',      true,  'mahasiswa'],
     ['GET',    '/api/laporan',             \App\Controllers\LaporanController::class,         'index',       true,  null],
     ['GET',    '/api/laporan/compare',     \App\Controllers\LaporanController::class,         'compare',     true,  'asprak'],
-    ['DELETE', '/api/laporan/{id}/cancel', \App\Controllers\LaporanController::class,         'cancel',      true,  'mahasiswa'],
+    ['POST',   '/api/laporan/{id}/cancel', \App\Controllers\LaporanController::class,         'cancel',      true,  'mahasiswa'],
     ['DELETE', '/api/laporan/{id}',       \App\Controllers\LaporanController::class,         'destroy',     true,  'mahasiswa'],
     ['GET',    '/api/laporan/{id}',        \App\Controllers\LaporanController::class,         'show',        true,  null],
     
