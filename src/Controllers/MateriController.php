@@ -207,6 +207,63 @@ class MateriController {
     }
 
     /**
+     * Mengedit materi/pengumuman (khusus asprak)
+     */
+    public function update(string $id): void {
+        try {
+            $user = AuthMiddleware::requireRole('asprak');
+            $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+            $supabase = SupabaseClient::getInstance();
+            
+            // Validasi materi milik asprak
+            $materiList = $supabase->select('materi', [
+                'id' => 'eq.' . $id,
+                'asprak_id' => 'eq.' . $user['user_id']
+            ]);
+            
+            if (empty($materiList)) {
+                http_response_code(403);
+                echo json_encode(["error" => "Materi tidak ditemukan atau akses ditolak"]);
+                return;
+            }
+            
+            // Siapkan data update
+            $updateData = [];
+            if (isset($data['judul'])) $updateData['judul'] = $data['judul'];
+            if (isset($data['isi'])) $updateData['isi'] = $data['isi'];
+            if (isset($data['tipe'])) $updateData['tipe'] = $data['tipe'];
+            if (isset($data['publish_at'])) $updateData['publish_at'] = $data['publish_at'];
+            
+            if (empty($updateData)) {
+                http_response_code(400);
+                echo json_encode(["error" => "Tidak ada data yang diupdate"]);
+                return;
+            }
+            
+            $updateData['updated_at'] = date('c');
+            
+            $result = $supabase->update('materi', $updateData, ['id' => 'eq.' . $id]);
+            
+            if ($result === false) {
+                http_response_code(500);
+                echo json_encode(["error" => "Gagal mengupdate materi"]);
+                return;
+            }
+            
+            http_response_code(200);
+            echo json_encode([
+                "message" => "Materi berhasil diupdate",
+                "data" => isset($result[0]) ? $result[0] : $result
+            ]);
+            
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+            error_log("MateriController::update Exception: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Menghapus materi (khusus asprak)
      */
     public function destroy(string $id): void {

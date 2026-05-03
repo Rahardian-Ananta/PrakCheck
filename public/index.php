@@ -70,6 +70,7 @@ $routes = [
     // Materi
     ['GET',    '/api/materi',              \App\Controllers\MateriController::class,          'index',       true,  null],
     ['POST',   '/api/materi',              \App\Controllers\MateriController::class,          'create',      true,  'asprak'],
+    ['PUT',    '/api/materi/{id}',         \App\Controllers\MateriController::class,          'update',      true,  'asprak'],
     ['DELETE', '/api/materi/{id}',         \App\Controllers\MateriController::class,          'destroy',     true,  'asprak'],
     
     // Notifikasi

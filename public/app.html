@@ -354,6 +354,27 @@
         </div>
     </div>
 
+    <div id="modal-edit-pengumuman" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Edit Pengumuman</div>
+                <button class="btn-icon" onclick="hideModal('modal-edit-pengumuman')">✕</button>
+            </div>
+            <form onsubmit="updatePengumuman(event)">
+                <input type="hidden" id="edit-pengumuman-id">
+                <div class="form-group">
+                    <label>Judul</label>
+                    <input type="text" id="edit-pengumuman-judul" required>
+                </div>
+                <div class="form-group">
+                    <label>Isi</label>
+                    <textarea id="edit-pengumuman-isi" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Simpan</button>
+            </form>
+        </div>
+    </div>
+
     <div id="modal-tugas" class="modal-overlay hidden">
         <div class="modal">
             <div class="modal-header">
@@ -376,6 +397,39 @@
                 <div class="form-group">
                     <label>Format File</label>
                     <select id="tugas-format">
+                        <option value="both">PDF & DOCX</option>
+                        <option value="pdf">PDF saja</option>
+                        <option value="docx">DOCX saja</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Simpan</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-edit-tugas" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Edit Tugas</div>
+                <button class="btn-icon" onclick="hideModal('modal-edit-tugas')">✕</button>
+            </div>
+            <form onsubmit="updateTugas(event)">
+                <input type="hidden" id="edit-tugas-id">
+                <div class="form-group">
+                    <label>Nama Tugas</label>
+                    <input type="text" id="edit-tugas-nama" required>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="edit-tugas-deskripsi"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Deadline</label>
+                    <input type="datetime-local" id="edit-tugas-deadline" required>
+                </div>
+                <div class="form-group">
+                    <label>Format File</label>
+                    <select id="edit-tugas-format">
                         <option value="both">PDF & DOCX</option>
                         <option value="pdf">PDF saja</option>
                         <option value="docx">DOCX saja</option>
@@ -437,6 +491,8 @@
         let mhsClasses = [];
         let asprakClasses = [];
         let selectedClassId = null;
+        let asprakPengumumanList = [];
+        let asprakTugasList = [];
 
         // Theme
         const initTheme = () => {
@@ -695,23 +751,27 @@
             const container = document.getElementById('asprak-sub-pengumuman');
             const res = await fetch(`/api/materi?kelas_id=${selectedClassId}`);
             const data = await res.json();
+            asprakPengumumanList = data.data || [];
             
             container.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
-                    <span class="text-sm text-muted">${data.data ? data.data.length : 0} pengumuman</span>
+                    <span class="text-sm text-muted">${asprakPengumumanList.length} pengumuman</span>
                     <button class="btn btn-sm btn-primary" onclick="showModal('modal-pengumuman')">+ Pengumuman</button>
                 </div>
             `;
             
-            if (data.data && data.data.length > 0) {
-                container.innerHTML += data.data.map(p => `
+            if (asprakPengumumanList.length > 0) {
+                container.innerHTML += asprakPengumumanList.map(p => `
                     <div class="item">
                         <div class="item-header">
                             <div>
                                 <div class="item-title">${p.judul}</div>
                                 <div class="item-meta">${new Date(p.publish_at).toLocaleDateString('id-ID')}</div>
                             </div>
-                            <button class="btn btn-sm btn-danger" onclick="deleteMateri('${p.id}')">Hapus</button>
+                            <div class="flex gap-2">
+                                <button class="btn btn-sm" onclick="editPengumuman('${p.id}')">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteMateri('${p.id}')">Hapus</button>
+                            </div>
                         </div>
                         <div class="text-sm mt-4" style="white-space:pre-wrap;">${p.isi}</div>
                     </div>
@@ -725,16 +785,17 @@
             const container = document.getElementById('asprak-sub-tugas');
             const res = await fetch(`/api/tugas?kelas_id=${selectedClassId}`);
             const data = await res.json();
+            asprakTugasList = data.data || [];
             
             container.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
-                    <span class="text-sm text-muted">${data.data ? data.data.length : 0} tugas</span>
+                    <span class="text-sm text-muted">${asprakTugasList.length} tugas</span>
                     <button class="btn btn-sm btn-primary" onclick="showModal('modal-tugas')">+ Tugas</button>
                 </div>
             `;
             
-            if (data.data && data.data.length > 0) {
-                container.innerHTML += data.data.map(t => {
+            if (asprakTugasList.length > 0) {
+                container.innerHTML += asprakTugasList.map(t => {
                     const deadline = new Date(t.deadline);
                     return `
                         <div class="item">
@@ -872,14 +933,40 @@
         };
 
         const editTugas = async (id) => {
-            const nama = prompt('Nama tugas baru:');
-            if (!nama) return;
-            await fetch(`/api/tugas/${id}`, {
+            // Ambil data tugas dulu
+            const res = await fetch(`/api/tugas/${id}`);
+            const data = await res.json();
+            if (!res.ok) { alert('Gagal'); return; }
+            
+            const t = data.data;
+            document.getElementById('edit-tugas-id').value = id;
+            document.getElementById('edit-tugas-nama').value = t.nama_tugas;
+            document.getElementById('edit-tugas-deskripsi').value = t.deskripsi || '';
+            document.getElementById('edit-tugas-deadline').value = t.deadline.slice(0, 16);
+            document.getElementById('edit-tugas-format').value = t.format_diizinkan;
+            showModal('modal-edit-tugas');
+        };
+
+        const updateTugas = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-tugas-id').value;
+            const res = await fetch(`/api/tugas/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({nama_tugas: nama})
+                body: JSON.stringify({
+                    nama_tugas: document.getElementById('edit-tugas-nama').value,
+                    deskripsi: document.getElementById('edit-tugas-deskripsi').value,
+                    deadline: document.getElementById('edit-tugas-deadline').value,
+                    format_diizinkan: document.getElementById('edit-tugas-format').value
+                })
             });
-            loadAsprakTugas();
+            if (res.ok) {
+                hideModal('modal-edit-tugas');
+                loadAsprakTugas();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Gagal');
+            }
         };
 
         const deleteTugas = async (id) => {
@@ -888,6 +975,36 @@
             const data = await res.json();
             if (res.ok) loadAsprakTugas();
             else alert(data.error || 'Gagal');
+        };
+
+        const editPengumuman = (id) => {
+            const p = asprakPengumumanList.find(item => item.id === id);
+            if (!p) { alert('Data tidak ditemukan'); return; }
+            
+            document.getElementById('edit-pengumuman-id').value = id;
+            document.getElementById('edit-pengumuman-judul').value = p.judul;
+            document.getElementById('edit-pengumuman-isi').value = p.isi;
+            showModal('modal-edit-pengumuman');
+        };
+
+        const updatePengumuman = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-pengumuman-id').value;
+            const res = await fetch(`/api/materi/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    judul: document.getElementById('edit-pengumuman-judul').value,
+                    isi: document.getElementById('edit-pengumuman-isi').value
+                })
+            });
+            if (res.ok) {
+                hideModal('modal-edit-pengumuman');
+                loadAsprakPengumuman();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Gagal');
+            }
         };
 
         const openUpload = (id, nama) => {
