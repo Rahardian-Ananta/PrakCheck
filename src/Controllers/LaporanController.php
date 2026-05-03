@@ -180,8 +180,13 @@ class LaporanController {
             
             $uploadResult = $supabase->uploadFile('laporan-files', $storagePath, $_FILES['file']['tmp_name'], $mime);
             if ($uploadResult === false) {
+                $errorMsg = "Gagal upload ke Supabase Storage. ";
+                $errorMsg .= "Cek: 1) Bucket 'laporan-files' sudah dibuat di Supabase? ";
+                $errorMsg .= "2) SUPABASE_SERVICE_KEY benar? ";
+                $errorMsg .= "3) Path: {$storagePath}";
+                error_log("LaporanController::upload - Upload failed: " . $errorMsg);
                 http_response_code(500);
-                echo json_encode(["error" => "Gagal menyimpan file, coba lagi"]);
+                echo json_encode(["error" => $errorMsg]);
                 return;
             }
             

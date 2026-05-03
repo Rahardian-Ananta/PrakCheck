@@ -151,13 +151,14 @@ class SupabaseClient {
                 error_log("SupabaseClient::uploadFile error: Cannot read local file $localFilePath");
                 return false;
             }
-
+            
             $endpoint = "/storage/v1/object/{$bucket}/{$storagePath}";
             $headers = ["Content-Type: {$mimeType}"];
             
             $res = $this->request('POST', $endpoint, $content, $headers);
             
-            if ($res['error']) {
+            if ($res['error'] || $res['status'] >= 400) {
+                error_log("SupabaseClient::uploadFile failed: Status {$res['status']}, Error: " . print_r($res['body'], true));
                 return false;
             }
             
