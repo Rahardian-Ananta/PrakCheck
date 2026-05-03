@@ -838,6 +838,7 @@ const loadMhsTugas = async () => {
             const container = document.getElementById('asprak-sub-pengumuman');
             const res = await fetch(`/api/materi?kelas_id=${selectedClassId}`);
             const data = await res.json();
+            console.log('loadAsprakPengumuman response', data);
             asprakPengumumanList = data.data || [];
             
             container.innerHTML = `
@@ -849,8 +850,7 @@ const loadMhsTugas = async () => {
             
             if (asprakPengumumanList.length > 0) {
                 container.innerHTML += asprakPengumumanList.map(p => {
-                    const hasLamp = p.lampiran_name ? 
-                        `<div class="mt-2"><span class="text-sm" style="color:var(--primary);">📎 ${p.lampiran_name}</span></div>` : '';
+                    const lampHtml = p.lampiran_name ? renderLampiran(p.lampiran_name, `/api/materi/${p.id}/lampiran`) : '';
                     return `
                         <div class="item">
                             <div class="item-header">
@@ -864,7 +864,7 @@ const loadMhsTugas = async () => {
                                 </div>
                             </div>
                             <div class="text-sm mt-4" style="white-space:pre-wrap;">${p.isi}</div>
-                            ${hasLamp}
+                            ${lampHtml}
                         </div>
                     `;
                 }).join('');
@@ -877,6 +877,7 @@ const loadMhsTugas = async () => {
             const container = document.getElementById('asprak-sub-tugas');
             const res = await fetch(`/api/tugas?kelas_id=${selectedClassId}`);
             const data = await res.json();
+            console.log('loadAsprakTugas response', data);
             asprakTugasList = data.data || [];
             
             container.innerHTML = `
@@ -889,8 +890,7 @@ const loadMhsTugas = async () => {
             if (asprakTugasList.length > 0) {
                 container.innerHTML += asprakTugasList.map(t => {
                     const deadline = new Date(t.deadline);
-                    const hasLampiran = t.lampiran_name ? 
-                        `<div class="mt-2"><span class="text-sm" style="color:var(--primary);">📎 Lampiran: ${t.lampiran_name}</span></div>` : '';
+                const lampHtml = t.lampiran_name ? renderLampiran(t.lampiran_name, `/api/tugas/${t.id}/lampiran`) : '';
                     return `
                         <div class="item">
                             <div class="item-header">
@@ -898,7 +898,7 @@ const loadMhsTugas = async () => {
                                     <div class="item-title">${t.nama_tugas}</div>
                                     <div class="item-meta">Deadline: ${deadline.toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})}</div>
                                     ${t.deskripsi ? `<div class="text-sm text-muted mt-2">${t.deskripsi}</div>` : ''}
-                                    ${hasLampiran}
+                                    ${lampHtml}
                                 </div>
                                 <span class="badge ${t.status === 'open' ? 'badge-primary' : 'badge-muted'}">${t.status}</span>
                             </div>
@@ -921,6 +921,19 @@ const loadMhsTugas = async () => {
             el.className = `alert alert-${type}`;
             el.style.display = 'block';
             setTimeout(() => el.style.display = 'none', 4000);
+        };
+
+        // Render lampiran preview depending on extension. Returns HTML string.
+        const renderLampiran = (name, url) => {
+            const ext = name.split('.').pop().toLowerCase();
+            if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
+                return `<div class="mt-2"><a href="${url}" target="_blank" onclick="event.stopPropagation();"><img src="${url}" alt="${name}" style="max-width:200px;display:block;border-radius:6px"/></a><div class="text-sm" style="color:var(--primary);">${name}</div></div>`;
+            }
+            if (ext === 'pdf') {
+                return `<div class="mt-2"><a href="${url}" target="_blank" onclick="event.stopPropagation();" style="color:var(--primary);">📄 ${name}</a></div>`;
+            }
+            // fallback: show file link
+            return `<div class="mt-2"><a href="${url}" target="_blank" onclick="event.stopPropagation();" style="color:var(--primary);">📎 ${name}</a></div>`;
         };
 
         const showModal = (id) => document.getElementById(id).classList.remove('hidden');
@@ -1025,13 +1038,16 @@ const loadMhsTugas = async () => {
             }
             
             const res = await fetch('/api/tugas', {method:'POST', body:formData});
+            const bodyText = await res.text();
+            let data = {};
+            try { data = JSON.parse(bodyText); } catch (e) { console.warn('Non-JSON response:', bodyText); }
             if (res.ok) {
                 alert('Tugas dibuat!');
                 hideModal('modal-tugas');
+                // prefer server-returned data to refresh UI immediately
                 loadAsprakTugas();
             } else {
-                const data = await res.json();
-                alert(data.error || 'Gagal');
+                alert((data && data.error) ? data.error : 'Gagal');
             }
         };
 

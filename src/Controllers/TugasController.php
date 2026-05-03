@@ -119,6 +119,8 @@ class TugasController {
             }
             
             $result = $supabase->insert('tugas', $insertData);
+            error_log('TugasController::create - uploadResult: ' . var_export($uploadResult ?? null, true));
+            error_log('TugasController::create - insert result: ' . var_export($result, true));
             
             http_response_code(201);
             echo json_encode(["message" => "Tugas berhasil dibuat", "data" => isset($result[0]) ? $result[0] : $result]);
