@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrakCheck — Smart Plagiarism Checker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-main); line-height: 1.5; }
+        .hidden { display: none !important; }
+        
+        /* Navbar */
+        nav { background: var(--surface); padding: 1rem 2rem; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        nav h1 { font-size: 1.5rem; color: var(--primary); font-weight: 700; letter-spacing: -0.5px; }
+        .nav-right { display: flex; align-items: center; gap: 1rem; }
+        
+        /* Layouts */
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--surface); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem; }
+        .card-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+        
+        /* Auth View (Center) */
+        #view-auth { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%); }
+        .auth-box { width: 100%; max-width: 400px; background: var(--surface); padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .auth-box h2 { text-align: center; margin-bottom: 2rem; color: var(--primary); }
+        .auth-switch { text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-muted); cursor: pointer; }
+        .auth-switch span { color: var(--primary); font-weight: 500; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-main); }
+        input, select { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        
+        /* Buttons */
+        button { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 1rem; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: var(--bg); }
+        .btn-danger { background: var(--danger); color: white; }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: var(--text-muted); font-size: 0.875rem; background: #f9fafb; }
+        tbody tr:hover { background: #f9fafb; }
+        
+        /* Alerts */
+        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem; display: none; }
+        .alert.error { background: #fef2f2; color: #991b1b; border: 1px solid #f87171; display: block; }
+        .alert.success { background: #ecfdf5; color: #065f46; border: 1px solid #34d399; display: block; }
+        
+        /* Badge */
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge.open { background: #e0e7ff; color: #3730a3; }
+        .badge.closed { background: #fef3c7; color: #92400e; }
+        .badge.analyzed { background: #d1fae5; color: #065f46; }
+        
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar (Hidden on Auth) -->
+    <nav id="navbar" class="hidden">
+        <h1>PrakCheck</h1>
+        <div class="nav-right">
+            <span id="user-badge" class="badge open"></span>
+            <span id="user-name" style="font-weight: 500;"></span>
+            <button class="btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <!-- AUTH VIEW -->
+    <div id="view-auth">
+        <div class="auth-box">
+            <h2 id="auth-title">Masuk ke PrakCheck</h2>
+            <div id="auth-alert" class="alert"></div>
+            
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div id="register-fields" class="hidden">
+                    <div class="form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="reg-nama">
+                    </div>
+                    <div class="form-group">
+                        <label>NRP / NIP</label>
+                        <input type="text" id="reg-nrp">
+                    </div>
+                    <div class="form-group">
+                        <label>Peran</label>
+                        <select id="reg-role">
+                            <option value="mahasiswa">Mahasiswa</option>
+                            <option value="asprak">Asisten Praktikum</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="auth-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="auth-password" required>
+                </div>
+                
+                <button type="submit" class="btn-primary" id="btn-auth">
+                    <span id="auth-btn-text">Masuk</span>
+                </button>
+            </form>
+            
+            <div class="auth-switch" onclick="toggleAuthMode()">
+                <span id="auth-switch-text">Belum punya akun? Daftar disini</span>
+            </div>
+            <div class="auth-switch" style="margin-top: 0.5rem;" onclick="alert('Fitur reset password via email belum dikonfigurasi. Silakan hubungi Administrator/Koor Asisten.')">
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Lupa Password?</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD MAHASISWA -->
+    <div id="view-mahasiswa" class="container hidden">
+        <div class="card">
+            <div class="card-title">Daftar Tugas Praktikum</div>
+            <div id="mhs-alert" class="alert"></div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama Tugas</th>
+                            <th>Deadline</th>
+                            <th>Format</th>
+                            <th>Status Laporan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-tugas-mhs">
+                        <!-- Data injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Upload Form Modal/Section -->
+        <div class="card hidden" id="upload-section">
+            <div class="card-title">Upload Laporan <span id="upload-tugas-name" style="font-weight: 400; color: var(--text-muted);"></span></div>
+            <form id="upload-form" onsubmit="handleUpload(event)">
+                <input type="hidden" id="upload-tugas-id">
+                <div class="form-group">
+                    <label>Pilih File Laporan (PDF/DOCX sesuai ketentuan)</label>
+                    <input type="file" id="upload-file" required accept=".pdf,.docx">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" style="width: auto;" id="btn-upload">Kirim Laporan</button>
+                    <button type="button" class="btn-outline" onclick="document.getElementById('upload-section').classList.add('hidden')">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD ASPRAK -->
+    <div id="view-asprak" class="container hidden">
+        <!-- Section Buat Tugas -->
+        <div class="card" style="background: #eef2ff;">
+            <div class="card-title">Buat Tugas Baru</div>
+            <form id="buat-tugas-form" onsubmit="handleBuatTugas(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Nama Tugas</label>
+                        <input type="text" id="tugas-nama" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ID Kelas (UUID dari database)</label>
+                        <input type="text" id="tugas-kelas-id" placeholder="Contoh: 123e4567-e89b-..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline</label>
+                        <input type="datetime-local" id="tugas-deadline" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Format Diizinkan</label>
+                        <select id="tugas-format">
+                            <option value="both">PDF & DOCX</option>
+                            <option value="pdf">Hanya PDF</option>
+                            <option value="docx">Hanya DOCX</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="width: auto;" id="btn-buat-tugas">Simpan Tugas</button>
+            </form>
+        </div>
+
+        <!-- Section Daftar Tugas -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+                <div style="font-size: 1.25rem; font-weight: 600;">Manajemen Tugas & Analisis</div>
+            </div>
+            
+            <div id="asprak-alert" class="alert"></div>
+            
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama Tugas</th>
+                            <th>Deadline</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-tugas-asprak">
+                        <!-- Data injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Hasil Analisis / Kemiripan Section -->
+        <div class="card hidden" id="hasil-section">
+            <div class="card-title">Hasil Kemiripan (Ranking)</div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mhs A</th>
+                            <th>Mhs B</th>
+                            <th>Skor Kemiripan</th>
+                            <th>Zona</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-kemiripan">
+                        <!-- Data injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section Beri Nilai -->
+        <div class="card hidden" id="nilai-section" style="background: #fffbeb;">
+            <div class="card-title">Penilaian Laporan</div>
+            <form id="nilai-form" onsubmit="handleBeriNilai(event)">
+                <input type="hidden" id="nilai-laporan-id">
+                <div class="form-group">
+                    <label>Laporan ID</label>
+                    <input type="text" id="nilai-laporan-display" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Nilai (0-100)</label>
+                    <input type="number" id="nilai-angka" min="0" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="nilai-plagiat"> Tandai sebagai Plagiat (Nilai otomatis 0)
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Catatan Opsional</label>
+                    <input type="text" id="nilai-catatan">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" style="width: auto;" id="btn-submit-nilai">Simpan Nilai</button>
+                    <button type="button" class="btn-outline" onclick="document.getElementById('nilai-section').classList.add('hidden')">Tutup</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP LOGIC -->
+    <script>
+        // State
+        let isLoginMode = true;
+        let currentUser = null;
+
+        // Init App
+        window.onload = async () => {
+            await checkSession();
+        };
+
+        // UI Helpers
+        const showView = (id) => {
+            ['view-auth', 'view-mahasiswa', 'view-asprak'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById('navbar').classList.toggle('hidden', id === 'view-auth');
+        };
+
+        const showAlert = (elId, message, type = 'error') => {
+            const el = document.getElementById(elId);
+            el.textContent = message;
+            el.className = `alert ${type}`;
+            setTimeout(() => el.className = 'alert hidden', 5000);
+        };
+
+        // --- AUTH LOGIC ---
+        const toggleAuthMode = () => {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-title').textContent = isLoginMode ? 'Masuk ke PrakCheck' : 'Buat Akun PrakCheck';
+            document.getElementById('auth-btn-text').textContent = isLoginMode ? 'Masuk' : 'Daftar Sekarang';
+            document.getElementById('auth-switch-text').textContent = isLoginMode ? 'Belum punya akun? Daftar disini' : 'Sudah punya akun? Masuk disini';
+            document.getElementById('register-fields').classList.toggle('hidden', isLoginMode);
+        };
+
+        const checkSession = async () => {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (res.ok) {
+                    currentUser = await res.json();
+                    setupDashboard();
+                } else {
+                    showView('view-auth');
+                }
+            } catch (e) {
+                showView('view-auth');
+            }
+        };
+
+        const handleAuth = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-auth');
+            btn.disabled = true;
+            const originalText = document.getElementById('auth-btn-text').textContent;
+            document.getElementById('auth-btn-text').innerHTML = 'Memproses... <div class="loader"></div>';
+
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            
+            let url = '/api/auth/login';
+            let payload = { email, password };
+
+            if (!isLoginMode) {
+                url = '/api/auth/register';
+                payload.nama = document.getElementById('reg-nama').value;
+                payload.nrp_nip = document.getElementById('reg-nrp').value;
+                payload.role = document.getElementById('reg-role').value;
+            }
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    if (!isLoginMode) {
+                        showAlert('auth-alert', 'Registrasi berhasil! Silakan login.', 'success');
+                        setTimeout(toggleAuthMode, 1500);
+                    } else {
+                        currentUser = data.user;
+                        setupDashboard();
+                    }
+                } else {
+                    showAlert('auth-alert', data.error || 'Terjadi kesalahan');
+                }
+            } catch (err) {
+                showAlert('auth-alert', 'Gagal menghubungi server');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('auth-btn-text').textContent = originalText;
+            }
+        };
+
+        const logout = async () => {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            currentUser = null;
+            showView('view-auth');
+            document.getElementById('auth-form').reset();
+        };
+
+        // --- DASHBOARD LOGIC ---
+        const setupDashboard = () => {
+            document.getElementById('user-name').textContent = currentUser.nama;
+            document.getElementById('user-badge').textContent = currentUser.role.toUpperCase();
+            
+            if (currentUser.role === 'mahasiswa') {
+                showView('view-mahasiswa');
+                loadTugasMahasiswa();
+            } else if (currentUser.role === 'asprak') {
+                showView('view-asprak');
+                loadTugasAsprak();
+            }
+        };
+
+        const loadTugasMahasiswa = async () => {
+            try {
+                const res = await fetch('/api/tugas');
+                const data = await res.json();
+                const tbody = document.getElementById('table-tugas-mhs');
+                tbody.innerHTML = '';
+                
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(t => {
+                        const tr = document.createElement('tr');
+                        const isClosed = new Date() > new Date(t.deadline) || t.status !== 'open';
+                        tr.innerHTML = `
+                            <td><strong>${t.nama_tugas}</strong><br><small style="color:var(--text-muted)">${t.deskripsi || ''}</small></td>
+                            <td>${new Date(t.deadline).toLocaleString()}</td>
+                            <td><span class="badge open">${t.format_diizinkan.toUpperCase()}</span></td>
+                            <td>-</td>
+                            <td>
+                                <button class="btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" 
+                                    onclick="openUpload('${t.id}', '${t.nama_tugas}')" ${isClosed ? 'disabled' : ''}>
+                                    ${isClosed ? 'Ditutup' : 'Upload Laporan'}
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Belum ada tugas tersedia</td></tr>';
+                }
+            } catch (err) {
+                showAlert('mhs-alert', 'Gagal memuat tugas');
+            }
+        };
+
+        const openUpload = (tugasId, tugasName) => {
+            document.getElementById('upload-tugas-id').value = tugasId;
+            document.getElementById('upload-tugas-name').textContent = `- ${tugasName}`;
+            document.getElementById('upload-section').classList.remove('hidden');
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        };
+
+        const handleUpload = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-upload');
+            btn.innerHTML = 'Mengupload... <div class="loader"></div>';
+            btn.disabled = true;
+
+            const tugasId = document.getElementById('upload-tugas-id').value;
+            const file = document.getElementById('upload-file').files[0];
+
+            const formData = new FormData();
+            formData.append('tugas_id', tugasId);
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/laporan/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showAlert('mhs-alert', 'Berhasil mengupload laporan!', 'success');
+                    document.getElementById('upload-form').reset();
+                    document.getElementById('upload-section').classList.add('hidden');
+                } else {
+                    showAlert('mhs-alert', data.error + (data.alasan ? ` (${data.alasan})` : ''));
+                }
+            } catch (err) {
+                showAlert('mhs-alert', 'Gagal mengupload file');
+            } finally {
+                btn.innerHTML = 'Kirim Laporan';
+                btn.disabled = false;
+            }
+        };
+
+        const loadTugasAsprak = async () => {
+            try {
+                const res = await fetch('/api/tugas');
+                const data = await res.json();
+                const tbody = document.getElementById('table-tugas-asprak');
+                tbody.innerHTML = '';
+                
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(t => {
+                        const tr = document.createElement('tr');
+                        const statusBadge = t.status === 'open' ? 'badge open' : (t.status === 'closed' ? 'badge closed' : 'badge analyzed');
+                        tr.innerHTML = `
+                            <td><strong>${t.nama_tugas}</strong><br><small>Kelas ID: ${t.kelas_id}</small></td>
+                            <td>${new Date(t.deadline).toLocaleString()}</td>
+                            <td><span class="${statusBadge}">${t.status.toUpperCase()}</span></td>
+                            <td style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+                                <button class="btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
+                                    onclick="triggerAnalisis('${t.id}')">Analisis CS</button>
+                                <button class="btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
+                                    onclick="lihatKemiripan('${t.id}')">Lihat Kemiripan</button>
+                                <button class="btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
+                                    onclick="window.open('/api/nilai/export?kelas_id=${t.kelas_id}')">Export Nilai</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Belum ada tugas</td></tr>';
+                }
+            } catch (err) {
+                showAlert('asprak-alert', 'Gagal memuat tugas');
+            }
+        };
+
+        const handleBuatTugas = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-buat-tugas');
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            const payload = {
+                nama_tugas: document.getElementById('tugas-nama').value,
+                kelas_id: document.getElementById('tugas-kelas-id').value,
+                deadline: document.getElementById('tugas-deadline').value,
+                format_diizinkan: document.getElementById('tugas-format').value
+            };
+
+            try {
+                const res = await fetch('/api/tugas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showAlert('asprak-alert', 'Tugas berhasil dibuat!', 'success');
+                    document.getElementById('buat-tugas-form').reset();
+                    loadTugasAsprak();
+                } else {
+                    showAlert('asprak-alert', data.error || 'Gagal membuat tugas');
+                }
+            } catch (err) {
+                showAlert('asprak-alert', 'Kesalahan koneksi');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Simpan Tugas';
+            }
+        };
+
+        const triggerAnalisis = async (tugasId) => {
+            showAlert('asprak-alert', 'Memulai analisis...', 'success');
+            try {
+                const res = await fetch(`/api/analisis/${tugasId}`, { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    showAlert('asprak-alert', data.message || `Analisis selesai! Diproses: ${data.total_pasang || 0} pasang`, 'success');
+                    loadTugasAsprak();
+                } else {
+                    showAlert('asprak-alert', data.error);
+                }
+            } catch (e) {
+                showAlert('asprak-alert', 'Gagal menjalankan analisis');
+            }
+        };
+
+        const lihatKemiripan = async (tugasId) => {
+            document.getElementById('hasil-section').classList.remove('hidden');
+            const tbody = document.getElementById('table-kemiripan');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Memuat data...</td></tr>';
+            
+            try {
+                const res = await fetch('/api/kemiripan'); // Note: The PHP controller currently doesn't filter by tugas_id directly without DB changes, assuming it returns all for the asprak for now.
+                const data = await res.json();
+                
+                tbody.innerHTML = '';
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(k => {
+                        const tr = document.createElement('tr');
+                        const skor = (k.skor_kemiripan * 100).toFixed(2);
+                        const zonaColor = k.zona === 'merah' ? 'var(--danger)' : (k.zona === 'kuning' ? '#f59e0b' : 'var(--success)');
+                        tr.innerHTML = `
+                            <td>${k.mahasiswa_id_a.substring(0,8)}...</td>
+                            <td>${k.mahasiswa_id_b.substring(0,8)}...</td>
+                            <td><strong>${skor}%</strong></td>
+                            <td style="color:${zonaColor}; font-weight:bold;">${k.zona.toUpperCase()}</td>
+                            <td>
+                                <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="openNilai('${k.laporan_id_a}')">Beri Nilai Mhs A</button>
+                                <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="openNilai('${k.laporan_id_b}')">Beri Nilai Mhs B</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Belum ada data kemiripan</td></tr>';
+                }
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Gagal memuat data.</td></tr>';
+            }
+        };
+
+        const openNilai = (laporanId) => {
+            document.getElementById('nilai-section').classList.remove('hidden');
+            document.getElementById('nilai-laporan-id').value = laporanId;
+            document.getElementById('nilai-laporan-display').value = laporanId;
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        };
+
+        const handleBeriNilai = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-nilai');
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            const payload = {
+                laporan_id: document.getElementById('nilai-laporan-id').value,
+                nilai: document.getElementById('nilai-angka').value,
+                is_plagiat: document.getElementById('nilai-plagiat').checked,
+                catatan: document.getElementById('nilai-catatan').value
+            };
+
+            try {
+                const res = await fetch('/api/nilai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showAlert('asprak-alert', 'Nilai berhasil disimpan!', 'success');
+                    document.getElementById('nilai-form').reset();
+                    document.getElementById('nilai-section').classList.add('hidden');
+                } else {
+                    showAlert('asprak-alert', data.error || 'Gagal menyimpan nilai');
+                }
+            } catch (err) {
+                showAlert('asprak-alert', 'Kesalahan koneksi');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Simpan Nilai';
+            }
+        };
+    </script>
+</body>
+</html>

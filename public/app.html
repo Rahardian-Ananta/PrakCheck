@@ -16,6 +16,7 @@
             --border: #e5e7eb;
             --danger: #ef4444;
             --success: #10b981;
+            --warning: #f59e0b;
             --radius: 12px;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
@@ -25,66 +26,122 @@
         .hidden { display: none !important; }
         
         /* Navbar */
-        nav { background: var(--surface); padding: 1rem 2rem; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        nav { background: var(--surface); padding: 1rem 2rem; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         nav h1 { font-size: 1.5rem; color: var(--primary); font-weight: 700; letter-spacing: -0.5px; }
         .nav-right { display: flex; align-items: center; gap: 1rem; }
         
         /* Layouts */
-        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-        .card { background: var(--surface); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem; }
-        .card-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .card-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
         
-        /* Auth View (Center) */
-        #view-auth { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%); }
-        .auth-box { width: 100%; max-width: 400px; background: var(--surface); padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
-        .auth-box h2 { text-align: center; margin-bottom: 2rem; color: var(--primary); }
-        .auth-switch { text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-muted); cursor: pointer; }
+        /* Auth View */
+        #view-auth { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%); padding: 1rem; }
+        .auth-box { width: 100%; max-width: 400px; background: var(--surface); padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .auth-box h2 { text-align: center; margin-bottom: 1.5rem; color: var(--primary); }
+        .auth-switch { text-align: center; margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted); cursor: pointer; }
         .auth-switch span { color: var(--primary); font-weight: 500; }
         
         /* Forms */
-        .form-group { margin-bottom: 1.25rem; }
-        label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-main); }
-        input, select { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
-        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.375rem; color: var(--text-main); }
+        input, select, textarea { width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 0.9375rem; transition: border-color 0.2s; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        textarea { resize: vertical; min-height: 100px; }
         
         /* Buttons */
-        button { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 1rem; }
+        button { display: inline-flex; align-items: center; justify-content: center; padding: 0.625rem 1.25rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 0.9375rem; }
         .btn-primary { background: var(--primary); color: white; width: 100%; }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        .btn-outline:hover { background: var(--bg); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
+        .btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-secondary:hover { background: var(--bg); }
         .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; width: auto; }
+        .btn-icon { padding: 0.375rem; background: transparent; color: var(--text-muted); }
+        .btn-icon:hover { background: var(--bg); color: var(--text-main); }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; }
+        .tab { padding: 0.75rem 1.25rem; border: none; background: transparent; color: var(--text-muted); font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+        .tab:hover { color: var(--text-main); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        
+        .sub-tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; background: var(--bg); padding: 0.25rem; border-radius: 8px; }
+        .sub-tab { padding: 0.5rem 1rem; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.875rem; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+        .sub-tab.active { background: var(--surface); color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         
         /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
-        th { font-weight: 600; color: var(--text-muted); font-size: 0.875rem; background: #f9fafb; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: var(--text-muted); font-size: 0.8125rem; background: #f9fafb; }
+        td { font-size: 0.9375rem; }
         tbody tr:hover { background: #f9fafb; }
         
+        /* Badges */
+        .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge-open { background: #e0e7ff; color: #3730a3; }
+        .badge-closed { background: #fef3c7; color: #92400e; }
+        .badge-analyzed { background: #d1fae5; color: #065f46; }
+        .badge-asprak { background: #ede9fe; color: #5b21b6; }
+        .badge-mhs { background: #dbeafe; color: #1e40af; }
+        
         /* Alerts */
-        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem; display: none; }
-        .alert.error { background: #fef2f2; color: #991b1b; border: 1px solid #f87171; display: block; }
-        .alert.success { background: #ecfdf5; color: #065f46; border: 1px solid #34d399; display: block; }
+        .alert { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem; }
+        .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #f87171; }
+        .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #34d399; }
         
-        /* Badge */
-        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
-        .badge.open { background: #e0e7ff; color: #3730a3; }
-        .badge.closed { background: #fef3c7; color: #92400e; }
-        .badge.analyzed { background: #d1fae5; color: #065f46; }
+        /* List Items */
+        .item-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; transition: all 0.2s; }
+        .item-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(79,70,229,0.1); }
+        .item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+        .item-title { font-weight: 600; font-size: 1rem; }
+        .item-meta { font-size: 0.8125rem; color: var(--text-muted); }
+        .item-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
         
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 10px; }
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+        .modal { background: var(--surface); border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .modal-title { font-size: 1.125rem; font-weight: 600; }
+        
+        /* Utility */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-1 { gap: 0.5rem; }
+        .gap-2 { gap: 1rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-muted { color: var(--text-muted); }
+        .text-center { text-align: center; }
+        .font-mono { font-family: monospace; }
+        
+        .empty-state { text-align: center; padding: 2rem; color: var(--text-muted); }
+        
+        .loader { border: 2px solid #f3f3f3; border-top: 2px solid var(--primary); border-radius: 50%; width: 16px; height: 16px; animation: spin 0.8s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Copy button */
+        .copy-wrapper { position: relative; }
+        .copy-btn { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); padding: 0.25rem 0.5rem; font-size: 0.75rem; }
     </style>
 </head>
 <body>
 
-    <!-- Navbar (Hidden on Auth) -->
+    <!-- Navbar -->
     <nav id="navbar" class="hidden">
         <h1>PrakCheck</h1>
         <div class="nav-right">
-            <span id="user-badge" class="badge open"></span>
-            <span id="user-name" style="font-weight: 500;"></span>
-            <button class="btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="logout()">Logout</button>
+            <span id="notif-badge" style="position:relative;">
+                <button class="btn-icon" onclick="showView('view-notifikasi')" style="font-size:1.25rem;">🔔</button>
+                <span id="notif-count" class="badge badge-closed" style="position:absolute;top:-5px;right:-5px;display:none;">0</span>
+            </span>
+            <span id="user-badge" class="badge"></span>
+            <span id="user-name" style="font-weight:500;"></span>
+            <button class="btn-secondary btn-sm" onclick="logout()">Logout</button>
         </div>
     </nav>
 
@@ -92,17 +149,17 @@
     <div id="view-auth">
         <div class="auth-box">
             <h2 id="auth-title">Masuk ke PrakCheck</h2>
-            <div id="auth-alert" class="alert"></div>
+            <div id="auth-alert" class="alert" style="display:none;"></div>
             
             <form id="auth-form" onsubmit="handleAuth(event)">
                 <div id="register-fields" class="hidden">
                     <div class="form-group">
                         <label>Nama Lengkap</label>
-                        <input type="text" id="reg-nama">
+                        <input type="text" id="reg-nama" placeholder="Nama lengkap Anda">
                     </div>
                     <div class="form-group">
                         <label>NRP / NIP</label>
-                        <input type="text" id="reg-nrp">
+                        <input type="text" id="reg-nrp" placeholder="NRP/NIP Anda">
                     </div>
                     <div class="form-group">
                         <label>Peran</label>
@@ -115,11 +172,11 @@
                 
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="auth-email" required>
+                    <input type="email" id="auth-email" required placeholder="email@mail.com">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="auth-password" required>
+                    <input type="password" id="auth-password" required placeholder="Minimal 8 karakter">
                 </div>
                 
                 <button type="submit" class="btn-primary" id="btn-auth">
@@ -128,193 +185,303 @@
             </form>
             
             <div class="auth-switch" onclick="toggleAuthMode()">
-                <span id="auth-switch-text">Belum punya akun? Daftar disini</span>
-            </div>
-            <div class="auth-switch" style="margin-top: 0.5rem;" onclick="alert('Fitur reset password via email belum dikonfigurasi. Silakan hubungi Administrator/Koor Asisten.')">
-                <span style="color: var(--text-muted); font-size: 0.8rem;">Lupa Password?</span>
+                <span id="auth-switch-text">Belum punya akun? Daftar</span>
             </div>
         </div>
     </div>
 
     <!-- DASHBOARD MAHASISWA -->
     <div id="view-mahasiswa" class="container hidden">
-        <div class="card">
-            <div class="card-title">Daftar Tugas Praktikum</div>
-            <div id="mhs-alert" class="alert"></div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nama Tugas</th>
-                            <th>Deadline</th>
-                            <th>Format</th>
-                            <th>Status Laporan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-tugas-mhs">
-                        <!-- Data injected by JS -->
-                    </tbody>
-                </table>
+        <div class="tabs">
+            <button class="tab active" data-tab="mhs-kelas" onclick="switchTab('mhs', this, 'section-mhs-kelas')">Kelas Saya</button>
+            <button class="tab" data-tab="mhs-pengumuman" onclick="switchTab('mhs', this, 'section-mhs-pengumuman')">Pengumuman</button>
+            <button class="tab" data-tab="mhs-tugas" onclick="switchTab('mhs', this, 'section-mhs-tugas')">Tugas</button>
+        </div>
+        
+        <!-- Tab: Kelas Saya -->
+        <div id="section-mhs-kelas" class="tab-section">
+            <div class="card">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="card-title" style="border:none;padding:0;margin:0;">Kelas yang Diikuti</div>
+                    <button class="btn-primary btn-sm" style="width:auto;" onclick="openModal('modal-join-kelas')">+ Join Kelas</button>
+                </div>
+                <div id="mhs-kelas-list"></div>
             </div>
         </div>
         
-        <!-- Upload Form Modal/Section -->
-        <div class="card hidden" id="upload-section">
-            <div class="card-title">Upload Laporan <span id="upload-tugas-name" style="font-weight: 400; color: var(--text-muted);"></span></div>
-            <form id="upload-form" onsubmit="handleUpload(event)">
-                <input type="hidden" id="upload-tugas-id">
-                <div class="form-group">
-                    <label>Pilih File Laporan (PDF/DOCX sesuai ketentuan)</label>
-                    <input type="file" id="upload-file" required accept=".pdf,.docx">
-                </div>
-                <div style="display: flex; gap: 1rem;">
-                    <button type="submit" class="btn-primary" style="width: auto;" id="btn-upload">Kirim Laporan</button>
-                    <button type="button" class="btn-outline" onclick="document.getElementById('upload-section').classList.add('hidden')">Batal</button>
-                </div>
-            </form>
+        <!-- Tab: Pengumuman -->
+        <div id="section-mhs-pengumuman" class="tab-section hidden">
+            <div class="card">
+                <div class="card-title">Pengumuman Terbaru</div>
+                <div id="mhs-pengumuman-list"></div>
+            </div>
+        </div>
+        
+        <!-- Tab: Tugas -->
+        <div id="section-mhs-tugas" class="tab-section hidden">
+            <div class="card">
+                <div class="card-title">Daftar Tugas</div>
+                <div id="mhs-tugas-list"></div>
+            </div>
         </div>
     </div>
 
     <!-- DASHBOARD ASPRAK -->
     <div id="view-asprak" class="container hidden">
-        <!-- Section Buat Tugas -->
-        <div class="card" style="background: #eef2ff;">
-            <div class="card-title">Buat Tugas Baru</div>
-            <form id="buat-tugas-form" onsubmit="handleBuatTugas(event)">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label>Nama Tugas</label>
-                        <input type="text" id="tugas-nama" required>
-                    </div>
-                    <div class="form-group">
-                        <label>ID Kelas (UUID dari database)</label>
-                        <input type="text" id="tugas-kelas-id" placeholder="Contoh: 123e4567-e89b-..." required>
-                    </div>
-                    <div class="form-group">
-                        <label>Deadline</label>
-                        <input type="datetime-local" id="tugas-deadline" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Format Diizinkan</label>
-                        <select id="tugas-format">
-                            <option value="both">PDF & DOCX</option>
-                            <option value="pdf">Hanya PDF</option>
-                            <option value="docx">Hanya DOCX</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="btn-primary" style="width: auto;" id="btn-buat-tugas">Simpan Tugas</button>
-            </form>
+        <div class="tabs">
+            <button class="tab active" data-tab="asprak-kelas" onclick="switchTab('asprak', this, 'section-asprak-kelas')">Kelas</button>
+            <button class="tab" data-tab="asprak-manage" onclick="switchTab('asprak', this, 'section-asprak-manage')">Kelola Kelas</button>
         </div>
-
-        <!-- Section Daftar Tugas -->
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
-                <div style="font-size: 1.25rem; font-weight: 600;">Manajemen Tugas & Analisis</div>
-            </div>
-            
-            <div id="asprak-alert" class="alert"></div>
-            
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nama Tugas</th>
-                            <th>Deadline</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-tugas-asprak">
-                        <!-- Data injected by JS -->
-                    </tbody>
-                </table>
+        
+        <!-- Tab: Kelas (List) -->
+        <div id="section-asprak-kelas" class="tab-section">
+            <div class="card" style="background:#eef2ff;">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="card-title" style="border:none;padding:0;margin:0;">Kelas yang Dibuat</div>
+                    <button class="btn-primary btn-sm" style="width:auto;" onclick="openModal('modal-buat-kelas')">+ Buat Kelas</button>
+                </div>
+                <div id="asprak-kelas-list"></div>
             </div>
         </div>
         
-        <!-- Hasil Analisis / Kemiripan Section -->
-        <div class="card hidden" id="hasil-section">
-            <div class="card-title">Hasil Kemiripan (Ranking)</div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mhs A</th>
-                            <th>Mhs B</th>
-                            <th>Skor Kemiripan</th>
-                            <th>Zona</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-kemiripan">
-                        <!-- Data injected by JS -->
-                    </tbody>
-                </table>
+        <!-- Tab: Kelola Kelas (Pengumuman, Tugas, Analisis) -->
+        <div id="section-asprak-manage" class="tab-section hidden">
+            <div class="card">
+                <label>Pilih Kelas</label>
+                <select id="asprak-kelas-select" onchange="loadAsprakKelasData()">
+                    <option value="">-- Pilih Kelas --</option>
+                </select>
+            </div>
+            
+            <div id="asprak-manage-content" class="hidden">
+                <div class="sub-tabs">
+                    <button class="sub-tab active" onclick="switchSubTab(this, 'sub-pengumuman')">Pengumuman</button>
+                    <button class="sub-tab" onclick="switchSubTab(this, 'sub-tugas')">Tugas</button>
+                    <button class="sub-tab" onclick="switchSubTab(this, 'sub-analisis')">Analisis & Nilai</button>
+                </div>
+                
+                <!-- Sub-tab: Pengumuman -->
+                <div id="sub-pengumuman" class="sub-section">
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="card-title" style="border:none;padding:0;margin:0;">Pengumuman</div>
+                            <button class="btn-primary btn-sm" style="width:auto;" onclick="openModal('modal-buat-pengumuman')">+ Buat Pengumuman</button>
+                        </div>
+                        <div id="asprak-pengumuman-list"></div>
+                    </div>
+                </div>
+                
+                <!-- Sub-tab: Tugas -->
+                <div id="sub-tugas" class="sub-section hidden">
+                    <div class="card" style="background:#eef2ff;">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="card-title" style="border:none;padding:0;margin:0;">Tugas</div>
+                            <button class="btn-primary btn-sm" style="width:auto;" onclick="openModal('modal-buat-tugas')">+ Buat Tugas</button>
+                        </div>
+                        <div id="asprak-tugas-list"></div>
+                    </div>
+                </div>
+                
+                <!-- Sub-tab: Analisis & Nilai -->
+                <div id="sub-analisis" class="sub-section hidden">
+                    <div class="card">
+                        <div class="card-title">Analisis Kemiripan</div>
+                        <div id="asprak-analisis-list"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Nilai Mahasiswa</div>
+                        <div id="asprak-nilai-list"></div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Section Beri Nilai -->
-        <div class="card hidden" id="nilai-section" style="background: #fffbeb;">
-            <div class="card-title">Penilaian Laporan</div>
-            <form id="nilai-form" onsubmit="handleBeriNilai(event)">
-                <input type="hidden" id="nilai-laporan-id">
+    <!-- MODALS -->
+    <div id="modal-join-kelas" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Join Kelas Baru</div>
+                <button class="btn-icon" onclick="closeModal('modal-join-kelas')">✕</button>
+            </div>
+            <form onsubmit="joinKelas(event)">
                 <div class="form-group">
-                    <label>Laporan ID</label>
-                    <input type="text" id="nilai-laporan-display" disabled>
+                    <label>Kode Kelas</label>
+                    <input type="text" id="join-kode" required placeholder="Contoh: ALG-2025-A">
                 </div>
+                <button type="submit" class="btn-primary" id="btn-join">Join Kelas</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-buat-kelas" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Buat Kelas Baru</div>
+                <button class="btn-icon" onclick="closeModal('modal-buat-kelas')">✕</button>
+            </div>
+            <form onsubmit="buatKelas(event)">
+                <div class="form-group">
+                    <label>Nama Kelas</label>
+                    <input type="text" id="kelas-nama" required placeholder="Contoh: Algoritma & Struktur Data A">
+                </div>
+                <div class="form-group">
+                    <label>Kode Kelas (unik)</label>
+                    <input type="text" id="kelas-kode" required placeholder="Contoh: ALG-2025-A" style="font-family:monospace;">
+                </div>
+                <div class="form-group">
+                    <label>Mata Kuliah</label>
+                    <input type="text" id="kelas-mk" required placeholder="Contoh: Algoritma & Struktur Data">
+                </div>
+                <div class="form-group">
+                    <label>Semester</label>
+                    <select id="kelas-semester" required>
+                        <option value="Ganjil">Ganjil</option>
+                        <option value="Genap">Genap</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tahun Ajaran</label>
+                    <input type="text" id="kelas-tahun" required placeholder="Contoh: 2025/2026">
+                </div>
+                <button type="submit" class="btn-primary" id="btn-buat-kelas">Simpan Kelas</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-buat-pengumuman" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Buat Pengumuman</div>
+                <button class="btn-icon" onclick="closeModal('modal-buat-pengumuman')">✕</button>
+            </div>
+            <form onsubmit="buatPengumuman(event)">
+                <div class="form-group">
+                    <label>Judul</label>
+                    <input type="text" id="pengumuman-judul" required>
+                </div>
+                <div class="form-group">
+                    <label>Isi Pengumuman</label>
+                    <textarea id="pengumuman-isi" required placeholder="Tulis pengumuman..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary" id="btn-buat-pengumuman">Publikasi</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-buat-tugas" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Buat Tugas Baru</div>
+                <button class="btn-icon" onclick="closeModal('modal-buat-tugas')">✕</button>
+            </div>
+            <form onsubmit="buatTugas(event)">
+                <div class="form-group">
+                    <label>Nama Tugas</label>
+                    <input type="text" id="tugas-nama" required>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi (opsional)</label>
+                    <textarea id="tugas-deskripsi" placeholder="Deskripsi tugas..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Deadline</label>
+                    <input type="datetime-local" id="tugas-deadline" required>
+                </div>
+                <div class="form-group">
+                    <label>Format File</label>
+                    <select id="tugas-format">
+                        <option value="both">PDF & DOCX</option>
+                        <option value="pdf">Hanya PDF</option>
+                        <option value="docx">Hanya DOCX</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" id="btn-buat-tugas">Simpan Tugas</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-upload-laporan" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Upload Laporan</div>
+                <button class="btn-icon" onclick="closeModal('modal-upload-laporan')">✕</button>
+            </div>
+            <form onsubmit="uploadLaporan(event)">
+                <input type="hidden" id="upload-tugas-id">
+                <p class="mb-2 text-sm text-muted">File: <span id="upload-tugas-name"></span></p>
+                <div class="form-group">
+                    <label>Pilih File (PDF/DOCX)</label>
+                    <input type="file" id="upload-file" required accept=".pdf,.docx">
+                </div>
+                <button type="submit" class="btn-primary" id="btn-upload">Kirim Laporan</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-nilai" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Beri Nilai</div>
+                <button class="btn-icon" onclick="closeModal('modal-nilai')">✕</button>
+            </div>
+            <form onsubmit="submitNilai(event)">
+                <input type="hidden" id="nilai-laporan-id">
                 <div class="form-group">
                     <label>Nilai (0-100)</label>
                     <input type="number" id="nilai-angka" min="0" max="100" required>
                 </div>
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="nilai-plagiat"> Tandai sebagai Plagiat (Nilai otomatis 0)
+                    <label style="display:flex;align-items:center;gap:0.5rem;">
+                        <input type="checkbox" id="nilai-plagiat" style="width:auto;" onchange="document.getElementById('nilai-angka').value=this.checked?'0':''">
+                        Tandai Plagiat (Nilai = 0)
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Catatan Opsional</label>
-                    <input type="text" id="nilai-catatan">
+                    <label>Catatan</label>
+                    <input type="text" id="nilai-catatan" placeholder="Catatan opsional">
                 </div>
-                <div style="display: flex; gap: 1rem;">
-                    <button type="submit" class="btn-primary" style="width: auto;" id="btn-submit-nilai">Simpan Nilai</button>
-                    <button type="button" class="btn-outline" onclick="document.getElementById('nilai-section').classList.add('hidden')">Tutup</button>
-                </div>
+                <button type="submit" class="btn-primary">Simpan Nilai</button>
             </form>
         </div>
     </div>
 
     <!-- MAIN APP LOGIC -->
     <script>
-        // State
         let isLoginMode = true;
         let currentUser = null;
+        let selectedKelasId = null;
 
-        // Init App
         window.onload = async () => {
             await checkSession();
         };
 
-        // UI Helpers
         const showView = (id) => {
-            ['view-auth', 'view-mahasiswa', 'view-asprak'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            ['view-auth', 'view-mahasiswa', 'view-asprak'].forEach(v => {
+                document.getElementById(v).classList.add('hidden');
+            });
             document.getElementById(id).classList.remove('hidden');
             document.getElementById('navbar').classList.toggle('hidden', id === 'view-auth');
         };
 
-        const showAlert = (elId, message, type = 'error') => {
+        const showAlert = (elId, msg, type = 'error') => {
             const el = document.getElementById(elId);
-            el.textContent = message;
-            el.className = `alert ${type}`;
-            setTimeout(() => el.className = 'alert hidden', 5000);
+            if (!el) return;
+            el.textContent = msg;
+            el.className = `alert alert-${type}`;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 4000);
         };
 
-        // --- AUTH LOGIC ---
+        const openModal = (id) => document.getElementById(id).classList.remove('hidden');
+        const closeModal = (id) => document.getElementById(id).classList.add('hidden');
+
+        // --- AUTH ---
         const toggleAuthMode = () => {
             isLoginMode = !isLoginMode;
-            document.getElementById('auth-title').textContent = isLoginMode ? 'Masuk ke PrakCheck' : 'Buat Akun PrakCheck';
-            document.getElementById('auth-btn-text').textContent = isLoginMode ? 'Masuk' : 'Daftar Sekarang';
-            document.getElementById('auth-switch-text').textContent = isLoginMode ? 'Belum punya akun? Daftar disini' : 'Sudah punya akun? Masuk disini';
+            document.getElementById('auth-title').textContent = isLoginMode ? 'Masuk ke PrakCheck' : 'Daftar Akun Baru';
+            document.getElementById('auth-btn-text').textContent = isLoginMode ? 'Masuk' : 'Daftar';
+            document.getElementById('auth-switch-text').textContent = isLoginMode ? 'Belum punya akun? Daftar' : 'Sudah punya akun? Masuk';
             document.getElementById('register-fields').classList.toggle('hidden', isLoginMode);
         };
 
@@ -336,17 +503,14 @@
             e.preventDefault();
             const btn = document.getElementById('btn-auth');
             btn.disabled = true;
-            const originalText = document.getElementById('auth-btn-text').textContent;
-            document.getElementById('auth-btn-text').innerHTML = 'Memproses... <div class="loader"></div>';
+            document.getElementById('auth-btn-text').innerHTML = '<span class="loader"></span>';
 
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
+            const url = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+            const payload = { email, password };
             
-            let url = '/api/auth/login';
-            let payload = { email, password };
-
             if (!isLoginMode) {
-                url = '/api/auth/register';
                 payload.nama = document.getElementById('reg-nama').value;
                 payload.nrp_nip = document.getElementById('reg-nrp').value;
                 payload.role = document.getElementById('reg-role').value;
@@ -358,8 +522,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
                 const data = await res.json();
+                
                 if (res.ok) {
                     if (!isLoginMode) {
                         showAlert('auth-alert', 'Registrasi berhasil! Silakan login.', 'success');
@@ -372,10 +536,10 @@
                     showAlert('auth-alert', data.error || 'Terjadi kesalahan');
                 }
             } catch (err) {
-                showAlert('auth-alert', 'Gagal menghubungi server');
+                showAlert('auth-alert', 'Gagal terhubung ke server');
             } finally {
                 btn.disabled = false;
-                document.getElementById('auth-btn-text').textContent = originalText;
+                document.getElementById('auth-btn-text').textContent = isLoginMode ? 'Masuk' : 'Daftar';
             }
         };
 
@@ -386,142 +550,460 @@
             document.getElementById('auth-form').reset();
         };
 
-        // --- DASHBOARD LOGIC ---
         const setupDashboard = () => {
             document.getElementById('user-name').textContent = currentUser.nama;
-            document.getElementById('user-badge').textContent = currentUser.role.toUpperCase();
+            const badge = document.getElementById('user-badge');
+            badge.textContent = currentUser.role.toUpperCase();
+            badge.className = `badge ${currentUser.role === 'asprak' ? 'badge-asprak' : 'badge-mhs'}`;
             
             if (currentUser.role === 'mahasiswa') {
                 showView('view-mahasiswa');
-                loadTugasMahasiswa();
-            } else if (currentUser.role === 'asprak') {
+                loadMhsKelas();
+                loadMhsPengumuman();
+                loadMhsTugas();
+            } else {
                 showView('view-asprak');
-                loadTugasAsprak();
+                loadAsprakKelas();
+            }
+            checkNotifikasi();
+        };
+
+        // --- TABS ---
+        const switchTab = (prefix, btn, sectionId) => {
+            document.querySelectorAll(`[data-tab^="${prefix}-"]`).forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll(`#view-${prefix} .tab-section`).forEach(s => s.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+        };
+
+        const switchSubTab = (btn, sectionId) => {
+            const parent = btn.closest('.sub-tabs') || btn.parentElement;
+            parent.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            parent.parentElement.querySelectorAll('.sub-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+        };
+
+        // --- MAHASISWA: KELAS ---
+        const loadMhsKelas = async () => {
+            try {
+                const res = await fetch('/api/kelas');
+                const data = await res.json();
+                const container = document.getElementById('mhs-kelas-list');
+                
+                if (data.data && data.data.length > 0) {
+                    container.innerHTML = data.data.map(k => `
+                        <div class="item-card">
+                            <div class="item-header">
+                                <div>
+                                    <div class="item-title">${k.nama_kelas}</div>
+                                    <div class="item-meta">${k.mata_kuliah} · ${k.semester} ${k.tahun_ajaran}</div>
+                                </div>
+                                <span class="badge badge-open">${k.kode_kelas}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state">Belum join kelas. Klik "+ Join Kelas" untuk bergabung.</div>';
+                }
+            } catch (e) {
+                document.getElementById('mhs-kelas-list').innerHTML = '<div class="empty-state">Gagal memuat kelas</div>';
             }
         };
 
-        const loadTugasMahasiswa = async () => {
+        const joinKelas = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-join');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span>';
+            
+            const kode = document.getElementById('join-kode').value;
+            
+            try {
+                const res = await fetch('/api/kelas/join', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ kode_kelas: kode })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showAlert('mhs-kelas-list', 'Berhasil join kelas!', 'success');
+                    closeModal('modal-join-kelas');
+                    loadMhsKelas();
+                    loadMhsPengumuman();
+                    loadMhsTugas();
+                } else {
+                    alert(data.error || 'Gagal join kelas');
+                }
+            } catch (err) {
+                alert('Gagal terhubung');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Join Kelas';
+            }
+        };
+
+        // --- MAHASISWA: PENGUMUMAN ---
+        const loadMhsPengumuman = async () => {
+            try {
+                const res = await fetch('/api/materi?tipe=pengumuman');
+                const data = await res.json();
+                const container = document.getElementById('mhs-pengumuman-list');
+                
+                if (data.data && data.data.length > 0) {
+                    container.innerHTML = data.data.map(p => `
+                        <div class="item-card">
+                            <div class="item-header">
+                                <div class="item-title">${p.judul}</div>
+                                <div class="item-meta">${new Date(p.publish_at).toLocaleDateString('id-ID')}</div>
+                            </div>
+                            <div style="white-space:pre-wrap;">${p.isi}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state">Belum ada pengumuman</div>';
+                }
+            } catch (e) {
+                document.getElementById('mhs-pengumuman-list').innerHTML = '<div class="empty-state">Gagal memuat</div>';
+            }
+        };
+
+        // --- MAHASISWA: TUGAS ---
+        const loadMhsTugas = async () => {
             try {
                 const res = await fetch('/api/tugas');
                 const data = await res.json();
-                const tbody = document.getElementById('table-tugas-mhs');
-                tbody.innerHTML = '';
+                const container = document.getElementById('mhs-tugas-list');
                 
                 if (data.data && data.data.length > 0) {
-                    data.data.forEach(t => {
-                        const tr = document.createElement('tr');
-                        const isClosed = new Date() > new Date(t.deadline) || t.status !== 'open';
-                        tr.innerHTML = `
-                            <td><strong>${t.nama_tugas}</strong><br><small style="color:var(--text-muted)">${t.deskripsi || ''}</small></td>
-                            <td>${new Date(t.deadline).toLocaleString()}</td>
-                            <td><span class="badge open">${t.format_diizinkan.toUpperCase()}</span></td>
-                            <td>-</td>
-                            <td>
-                                <button class="btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" 
-                                    onclick="openUpload('${t.id}', '${t.nama_tugas}')" ${isClosed ? 'disabled' : ''}>
-                                    ${isClosed ? 'Ditutup' : 'Upload Laporan'}
-                                </button>
-                            </td>
+                    container.innerHTML = data.data.map(t => {
+                        const deadline = new Date(t.deadline);
+                        const isClosed = deadline < new Date() || t.status === 'closed';
+                        return `
+                            <div class="item-card">
+                                <div class="item-header">
+                                    <div>
+                                        <div class="item-title">${t.nama_tugas}</div>
+                                        <div class="item-meta">Deadline: ${deadline.toLocaleString('id-ID')}</div>
+                                    </div>
+                                    <span class="badge ${t.status === 'open' ? 'badge-open' : 'badge-closed'}">${t.status.toUpperCase()}</span>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn-primary btn-sm" onclick="openUpload('${t.id}', '${t.nama_tugas}')" ${isClosed ? 'disabled' : ''}>
+                                        ${isClosed ? 'Ditutup' : 'Upload Laporan'}
+                                    </button>
+                                    <button class="btn-secondary btn-sm" onclick="cekLaporan('${t.id}')">Cek Laporan</button>
+                                </div>
+                            </div>
                         `;
-                        tbody.appendChild(tr);
-                    });
+                    }).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Belum ada tugas tersedia</td></tr>';
+                    container.innerHTML = '<div class="empty-state">Belum ada tugas</div>';
                 }
-            } catch (err) {
-                showAlert('mhs-alert', 'Gagal memuat tugas');
+            } catch (e) {
+                document.getElementById('mhs-tugas-list').innerHTML = '<div class="empty-state">Gagal memuat tugas</div>';
             }
         };
 
         const openUpload = (tugasId, tugasName) => {
             document.getElementById('upload-tugas-id').value = tugasId;
-            document.getElementById('upload-tugas-name').textContent = `- ${tugasName}`;
-            document.getElementById('upload-section').classList.remove('hidden');
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            document.getElementById('upload-tugas-name').textContent = tugasName;
+            openModal('modal-upload-laporan');
         };
 
-        const handleUpload = async (e) => {
+        const uploadLaporan = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-upload');
-            btn.innerHTML = 'Mengupload... <div class="loader"></div>';
             btn.disabled = true;
-
-            const tugasId = document.getElementById('upload-tugas-id').value;
-            const file = document.getElementById('upload-file').files[0];
-
+            btn.innerHTML = '<span class="loader"></span>';
+            
             const formData = new FormData();
-            formData.append('tugas_id', tugasId);
-            formData.append('file', file);
-
+            formData.append('tugas_id', document.getElementById('upload-tugas-id').value);
+            formData.append('file', document.getElementById('upload-file').files[0]);
+            
             try {
-                const res = await fetch('/api/laporan/upload', {
+                const res = await fetch('/api/laporan/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('Laporan berhasil dikirim!');
+                    closeModal('modal-upload-laporan');
+                    loadMhsTugas();
+                } else {
+                    alert(data.error || 'Gagal upload');
+                }
+            } catch (err) {
+                alert('Gagal terhubung');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Kirim Laporan';
+            }
+        };
+
+        const cekLaporan = async (tugasId) => {
+            try {
+                const res = await fetch(`/api/laporan?tugas_id=${tugasId}`);
+                const data = await res.json();
+                
+                if (data.data && data.data.length > 0) {
+                    const myLap = data.data.find(l => l.mahasiswa_id === currentUser.id);
+                    if (myLap) {
+                        if (confirm(`Status: ${myLap.status}\nFile: ${myLap.file_name}\nNilai: ${myLap.nilai ?? 'Belum dinilai'}\n\nKlik OK untuk membatalkan, Cancel untuk menutup.`)) {
+                            if (myLap.status === 'diterima' || myLap.status === 'ditolak') {
+                                cancelLaporan(myLap.id);
+                            }
+                        }
+                    } else {
+                        alert('Anda belum upload laporan');
+                    }
+                } else {
+                    alert('Tidak ada laporan untuk tugas ini');
+                }
+            } catch (e) {
+                alert('Gagal cek laporan');
+            }
+        };
+
+        const cancelLaporan = async (laporanId) => {
+            if (!confirm('Yakin Batalkan laporan? Anda bisa upload ulang.')) return;
+            try {
+                const res = await fetch(`/api/laporan/${laporanId}/cancel`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('Laporan berhasil dibatalkan!');
+                    loadMhsTugas();
+                } else {
+                    alert(data.error || 'Gagal membatalkan');
+                }
+            } catch (e) {
+                alert('Gagal terhubung');
+            }
+        };
+
+        // --- ASPRAK: KELAS ---
+        const loadAsprakKelas = async () => {
+            try {
+                const res = await fetch('/api/kelas');
+                const data = await res.json();
+                const container = document.getElementById('asprak-kelas-list');
+                const select = document.getElementById('asprak-kelas-select');
+                
+                select.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+                
+                if (data.data && data.data.length > 0) {
+                    container.innerHTML = data.data.map(k => `
+                        <div class="item-card">
+                            <div class="item-header">
+                                <div>
+                                    <div class="item-title">${k.nama_kelas}</div>
+                                    <div class="item-meta">${k.mata_kuliah} · ${k.semester} ${k.tahun_ajaran}</div>
+                                </div>
+                                <div class="copy-wrapper">
+                                    <span class="font-mono" style="background:#e5e7eb;padding:0.25rem 0.5rem;border-radius:4px;">${k.kode_kelas}</span>
+                                    <button class="btn-secondary btn-sm copy-btn" onclick="copyToClipboard('${k.kode_kelas}')">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    data.data.forEach(k => {
+                        select.innerHTML += `<option value="${k.id}">${k.nama_kelas} (${k.kode_kelas})</option>`;
+                    });
+                } else {
+                    container.innerHTML = '<div class="empty-state">Belum buat kelas. Klik "+ Buat Kelas".</div>';
+                }
+            } catch (e) {
+                document.getElementById('asprak-kelas-list').innerHTML = '<div class="empty-state">Gagal memuat</div>';
+            }
+        };
+
+        const copyToClipboard = async (text) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('Kode disalin!');
+            } catch (e) {
+                prompt('Salin kode ini:', text);
+            }
+        };
+
+        const buatKelas = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-buat-kelas');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span>';
+            
+            const payload = {
+                nama_kelas: document.getElementById('kelas-nama').value,
+                kode_kelas: document.getElementById('kelas-kode').value,
+                mata_kuliah: document.getElementById('kelas-mk').value,
+                semester: document.getElementById('kelas-semester').value,
+                tahun_ajaran: document.getElementById('kelas-tahun').value
+            };
+            
+            try {
+                const res = await fetch('/api/kelas', {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
                 
                 if (res.ok) {
-                    showAlert('mhs-alert', 'Berhasil mengupload laporan!', 'success');
-                    document.getElementById('upload-form').reset();
-                    document.getElementById('upload-section').classList.add('hidden');
+                    alert('Kelas berhasil dibuat!');
+                    closeModal('modal-buat-kelas');
+                    loadAsprakKelas();
                 } else {
-                    showAlert('mhs-alert', data.error + (data.alasan ? ` (${data.alasan})` : ''));
+                    alert(data.error || 'Gagal buat kelas');
                 }
             } catch (err) {
-                showAlert('mhs-alert', 'Gagal mengupload file');
+                alert('Gagal terhubung');
             } finally {
-                btn.innerHTML = 'Kirim Laporan';
                 btn.disabled = false;
+                btn.textContent = 'Simpan Kelas';
             }
         };
 
-        const loadTugasAsprak = async () => {
+        // --- ASPRAK: LOAD DATA KELAS ---
+        const loadAsprakKelasData = () => {
+            selectedKelasId = document.getElementById('asprak-kelas-select').value;
+            if (!selectedKelasId) {
+                document.getElementById('asprak-manage-content').classList.add('hidden');
+                return;
+            }
+            document.getElementById('asprak-manage-content').classList.remove('hidden');
+            loadAsprakPengumuman();
+            loadAsprakTugas();
+        };
+
+        // --- ASPRAK: PENGUMUMAN ---
+        const loadAsprakPengumuman = async () => {
+            if (!selectedKelasId) return;
             try {
-                const res = await fetch('/api/tugas');
+                const res = await fetch(`/api/materi?kelas_id=${selectedKelasId}`);
                 const data = await res.json();
-                const tbody = document.getElementById('table-tugas-asprak');
-                tbody.innerHTML = '';
+                const container = document.getElementById('asprak-pengumuman-list');
                 
                 if (data.data && data.data.length > 0) {
-                    data.data.forEach(t => {
-                        const tr = document.createElement('tr');
-                        const statusBadge = t.status === 'open' ? 'badge open' : (t.status === 'closed' ? 'badge closed' : 'badge analyzed');
-                        tr.innerHTML = `
-                            <td><strong>${t.nama_tugas}</strong><br><small>Kelas ID: ${t.kelas_id}</small></td>
-                            <td>${new Date(t.deadline).toLocaleString()}</td>
-                            <td><span class="${statusBadge}">${t.status.toUpperCase()}</span></td>
-                            <td style="display:flex; gap:0.5rem; flex-wrap: wrap;">
-                                <button class="btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
-                                    onclick="triggerAnalisis('${t.id}')">Analisis CS</button>
-                                <button class="btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
-                                    onclick="lihatKemiripan('${t.id}')">Lihat Kemiripan</button>
-                                <button class="btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto;" 
-                                    onclick="window.open('/api/nilai/export?kelas_id=${t.kelas_id}')">Export Nilai</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                    container.innerHTML = data.data.map(p => `
+                        <div class="item-card">
+                            <div class="item-header">
+                                <div>
+                                    <div class="item-title">${p.judul}</div>
+                                    <div class="item-meta">${new Date(p.publish_at).toLocaleDateString('id-ID')}</div>
+                                </div>
+                                <button class="btn-danger btn-sm" onclick="hapusMateri('${p.id}')">Hapus</button>
+                            </div>
+                        </div>
+                    `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Belum ada tugas</td></tr>';
+                    container.innerHTML = '<div class="empty-state">Belum ada pengumuman</div>';
                 }
-            } catch (err) {
-                showAlert('asprak-alert', 'Gagal memuat tugas');
+            } catch (e) {
+                document.getElementById('asprak-pengumuman-list').innerHTML = '<div class="empty-state">Gagal memuat</div>';
             }
         };
 
-        const handleBuatTugas = async (e) => {
+        const buatPengumuman = async (e) => {
             e.preventDefault();
+            if (!selectedKelasId) return alert('Pilih kelas terlebih dahulu');
+            
+            const btn = document.getElementById('btn-buat-pengumuman');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span>';
+            
+            const formData = new FormData();
+            formData.append('kelas_id', selectedKelasId);
+            formData.append('judul', document.getElementById('pengumuman-judul').value);
+            formData.append('isi', document.getElementById('pengumuman-isi').value);
+            formData.append('tipe', 'pengumuman');
+            
+            try {
+                const res = await fetch('/api/materi', { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('Pengumuman dibuat!');
+                    closeModal('modal-buat-pengumuman');
+                    loadAsprakPengumuman();
+                } else {
+                    alert(data.error || 'Gagal');
+                }
+            } catch (err) {
+                alert('Gagal');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Publikasi';
+            }
+        };
+
+        const hapusMateri = async (id) => {
+            if (!confirm('Yakin hapus?')) return;
+            try {
+                const res = await fetch(`/api/materi/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadAsprakPengumuman();
+                } else {
+                    alert('Gagal hapus');
+                }
+            } catch (e) {
+                alert('Gagal');
+            }
+        };
+
+        // --- ASPRAK: TUGAS ---
+        const loadAsprakTugas = async () => {
+            if (!selectedKelasId) return;
+            try {
+                const res = await fetch(`/api/tugas?kelas_id=${selectedKelasId}`);
+                const data = await res.json();
+                const container = document.getElementById('asprak-tugas-list');
+                
+                if (data.data && data.data.length > 0) {
+                    container.innerHTML = data.data.map(t => {
+                        const deadline = new Date(t.deadline);
+                        const isClosed = deadline < new Date() || t.status !== 'open';
+                        return `
+                            <div class="item-card">
+                                <div class="item-header">
+                                    <div>
+                                        <div class="item-title">${t.nama_tugas}</div>
+                                        <div class="item-meta">Deadline: ${deadline.toLocaleDateString('id-ID')} · Format: ${t.format_diizinkan}</div>
+                                    </div>
+                                    <span class="badge ${t.status === 'open' ? 'badge-open' : 'badge-closed'}">${t.status.toUpperCase()}</span>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn-secondary btn-sm" onclick="editTugas('${t.id}')">Edit</button>
+                                    <button class="btn-danger btn-sm" onclick="hapusTugas('${t.id}')">Hapus</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state">Belum ada tugas</div>';
+                }
+            } catch (e) {
+                document.getElementById('asprak-tugas-list').innerHTML = '<div class="empty-state">Gagal memuat</div>';
+            }
+        };
+
+        const buatTugas = async (e) => {
+            e.preventDefault();
+            if (!selectedKelasId) return alert('Pilih kelas terlebih dahulu');
+            
             const btn = document.getElementById('btn-buat-tugas');
             btn.disabled = true;
-            btn.textContent = 'Menyimpan...';
-
+            btn.innerHTML = '<span class="loader"></span>';
+            
             const payload = {
                 nama_tugas: document.getElementById('tugas-nama').value,
-                kelas_id: document.getElementById('tugas-kelas-id').value,
+                deskripsi: document.getElementById('tugas-deskripsi').value,
                 deadline: document.getElementById('tugas-deadline').value,
-                format_diizinkan: document.getElementById('tugas-format').value
+                format_diizinkan: document.getElementById('tugas-format').value,
+                kelas_id: selectedKelasId
             };
-
+            
             try {
                 const res = await fetch('/api/tugas', {
                     method: 'POST',
@@ -531,112 +1013,114 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    showAlert('asprak-alert', 'Tugas berhasil dibuat!', 'success');
-                    document.getElementById('buat-tugas-form').reset();
-                    loadTugasAsprak();
+                    alert('Tugas dibuat!');
+                    closeModal('modal-buat-tugas');
+                    loadAsprakTugas();
                 } else {
-                    showAlert('asprak-alert', data.error || 'Gagal membuat tugas');
+                    alert(data.error || 'Gagal');
                 }
             } catch (err) {
-                showAlert('asprak-alert', 'Kesalahan koneksi');
+                alert('Gagal');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Simpan Tugas';
             }
         };
 
+        const editTugas = async (id) => {
+            const nama = prompt('Nama tugas baru:');
+            if (!nama) return;
+            try {
+                const res = await fetch(`/api/tugas/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nama_tugas: nama })
+                });
+                if (res.ok) {
+                    loadAsprakTugas();
+                } else {
+                    alert('Gagal edit');
+                }
+            } catch (e) {
+                alert('Gagal');
+            }
+        };
+
+        const hapusTugas = async (id) => {
+            if (!confirm('Yakin hapus? Semua laporan akan hilang.')) return;
+            try {
+                const res = await fetch(`/api/tugas/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) {
+                    loadAsprakTugas();
+                } else {
+                    alert(data.error || 'Gagal hapus');
+                }
+            } catch (e) {
+                alert('Gagal');
+            }
+        };
+
+        // --- ASPRAK: ANALISIS & NILAI ---
+        const loadAsprakAnalisis = async () => {
+            if (!selectedKelasId) return;
+            try {
+                const res = await fetch(`/api/tugas?kelas_id=${selectedKelasId}`);
+                const data = await res.json();
+                const container = document.getElementById('asprak-analisis-list');
+                
+                if (data.data && data.data.length > 0) {
+                    container.innerHTML = data.data.map(t => `
+                        <div class="item-card">
+                            <div class="item-header">
+                                <div>
+                                    <div class="item-title">${t.nama_tugas}</div>
+                                    <div class="item-meta">Status: ${t.status} · Analyzed: ${t.is_analyzed ? 'Ya' : 'Belum'}</div>
+                                </div>
+                                <button class="btn-primary btn-sm" onclick="triggerAnalisis('${t.id}')" ${t.is_analyzed ? 'disabled' : ''}>
+                                    ${t.is_analyzed ? 'Selesai' : 'Analisis'}
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state">Belum ada tugas</div>';
+                }
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state">Gagal memuat</div>';
+            }
+        };
+
         const triggerAnalisis = async (tugasId) => {
-            showAlert('asprak-alert', 'Memulai analisis...', 'success');
+            if (!confirm('Mulai analisis kemiripan?')) return;
             try {
                 const res = await fetch(`/api/analisis/${tugasId}`, { method: 'POST' });
                 const data = await res.json();
-                if (res.ok) {
-                    showAlert('asprak-alert', data.message || `Analisis selesai! Diproses: ${data.total_pasang || 0} pasang`, 'success');
-                    loadTugasAsprak();
-                } else {
-                    showAlert('asprak-alert', data.error);
-                }
-            } catch (e) {
-                showAlert('asprak-alert', 'Gagal menjalankan analisis');
-            }
-        };
-
-        const lihatKemiripan = async (tugasId) => {
-            document.getElementById('hasil-section').classList.remove('hidden');
-            const tbody = document.getElementById('table-kemiripan');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Memuat data...</td></tr>';
-            
-            try {
-                const res = await fetch('/api/kemiripan'); // Note: The PHP controller currently doesn't filter by tugas_id directly without DB changes, assuming it returns all for the asprak for now.
-                const data = await res.json();
-                
-                tbody.innerHTML = '';
-                if (data.data && data.data.length > 0) {
-                    data.data.forEach(k => {
-                        const tr = document.createElement('tr');
-                        const skor = (k.skor_kemiripan * 100).toFixed(2);
-                        const zonaColor = k.zona === 'merah' ? 'var(--danger)' : (k.zona === 'kuning' ? '#f59e0b' : 'var(--success)');
-                        tr.innerHTML = `
-                            <td>${k.mahasiswa_id_a.substring(0,8)}...</td>
-                            <td>${k.mahasiswa_id_b.substring(0,8)}...</td>
-                            <td><strong>${skor}%</strong></td>
-                            <td style="color:${zonaColor}; font-weight:bold;">${k.zona.toUpperCase()}</td>
-                            <td>
-                                <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="openNilai('${k.laporan_id_a}')">Beri Nilai Mhs A</button>
-                                <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="openNilai('${k.laporan_id_b}')">Beri Nilai Mhs B</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Belum ada data kemiripan</td></tr>';
-                }
-            } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Gagal memuat data.</td></tr>';
-            }
-        };
-
-        const openNilai = (laporanId) => {
-            document.getElementById('nilai-section').classList.remove('hidden');
-            document.getElementById('nilai-laporan-id').value = laporanId;
-            document.getElementById('nilai-laporan-display').value = laporanId;
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        };
-
-        const handleBeriNilai = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit-nilai');
-            btn.disabled = true;
-            btn.textContent = 'Menyimpan...';
-
-            const payload = {
-                laporan_id: document.getElementById('nilai-laporan-id').value,
-                nilai: document.getElementById('nilai-angka').value,
-                is_plagiat: document.getElementById('nilai-plagiat').checked,
-                catatan: document.getElementById('nilai-catatan').value
-            };
-
-            try {
-                const res = await fetch('/api/nilai', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
                 
                 if (res.ok) {
-                    showAlert('asprak-alert', 'Nilai berhasil disimpan!', 'success');
-                    document.getElementById('nilai-form').reset();
-                    document.getElementById('nilai-section').classList.add('hidden');
+                    alert(`Analisis selesai! ${data.total_pasang || 0} pasang dianalisis.`);
+                    loadAsprakAnalisis();
                 } else {
-                    showAlert('asprak-alert', data.error || 'Gagal menyimpan nilai');
+                    alert(data.error || 'Gagal');
                 }
-            } catch (err) {
-                showAlert('asprak-alert', 'Kesalahan koneksi');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Simpan Nilai';
+            } catch (e) {
+                alert('Gagal');
             }
+        };
+
+        // --- NOTIFIKASI ---
+        const checkNotifikasi = async () => {
+            try {
+                const res = await fetch('/api/notifikasi');
+                const data = await res.json();
+                const count = document.getElementById('notif-count');
+                if (data.unread_count > 0) {
+                    count.textContent = data.unread_count;
+                    count.style.display = 'inline-block';
+                } else {
+                    count.style.display = 'none';
+                }
+            } catch (e) {}
         };
     </script>
 </body>
