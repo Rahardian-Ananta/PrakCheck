@@ -330,7 +330,7 @@ class MateriController {
 
     public function downloadLampiran(string $id): void {
         try {
-            AuthMiddleware::check();
+            // Public endpoint: tidak memerlukan session agar browser bisa menampilkan preview
             $supabase = SupabaseClient::getInstance();
             
             $materiList = $supabase->select('materi', ['id' => 'eq.' . $id]);

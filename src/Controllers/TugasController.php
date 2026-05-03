@@ -294,7 +294,7 @@ class TugasController {
 
     public function downloadLampiran(string $id): void {
         try {
-            AuthMiddleware::check();
+            // Public endpoint: tidak memerlukan session agar browser bisa menampilkan preview
             $supabase = SupabaseClient::getInstance();
             
             $tugasList = $supabase->select('tugas', ['id' => 'eq.' . $id]);

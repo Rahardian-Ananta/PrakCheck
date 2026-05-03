@@ -47,7 +47,7 @@ $routes = [
     ['GET',    '/api/tugas/{id}',          \App\Controllers\TugasController::class,           'show',        true,  null],
     ['PUT',    '/api/tugas/{id}',          \App\Controllers\TugasController::class,           'update',      true,  'asprak'],
     ['DELETE', '/api/tugas/{id}',          \App\Controllers\TugasController::class,           'destroy',     true,  'asprak'],
-    ['GET',    '/api/tugas/{id}/lampiran',  \App\Controllers\TugasController::class,           'downloadLampiran', true,  null],
+    ['GET',    '/api/tugas/{id}/lampiran',  \App\Controllers\TugasController::class,           'downloadLampiran', false,  null],
 
     // Laporan
     ['POST',   '/api/laporan/upload',      \App\Controllers\LaporanController::class,         'upload',      true,  'mahasiswa'],
@@ -74,7 +74,7 @@ $routes = [
     ['POST',   '/api/materi',              \App\Controllers\MateriController::class,          'create',      true,  'asprak'],
     ['PUT',    '/api/materi/{id}',         \App\Controllers\MateriController::class,          'update',      true,  'asprak'],
     ['DELETE', '/api/materi/{id}',         \App\Controllers\MateriController::class,          'destroy',     true,  'asprak'],
-    ['GET',    '/api/materi/{id}/lampiran', \App\Controllers\MateriController::class,        'downloadLampiran', true,  null],
+    ['GET',    '/api/materi/{id}/lampiran', \App\Controllers\MateriController::class,        'downloadLampiran', false,  null],
     
     // Notifikasi
     ['GET',    '/api/notifikasi',          \App\Controllers\NotifikasiController::class,      'index',       true,  null],
