@@ -1044,6 +1044,8 @@ const loadMhsTugas = async () => {
             const bodyText = await res.text();
             let data = {};
             try { data = JSON.parse(bodyText); } catch (e) { console.warn('Non-JSON response:', bodyText); }
+            console.log('createTugas response bodyText:', bodyText);
+            console.log('createTugas parsed data:', data);
             if (res.ok) {
                 alert('Tugas dibuat!');
                 hideModal('modal-tugas');

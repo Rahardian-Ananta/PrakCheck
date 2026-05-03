@@ -18,6 +18,13 @@ class TugasController {
                 $filters['asprak_id'] = 'eq.' . $user['user_id'];
                 $filters['order'] = 'created_at.desc';
                 $tugas = $supabase->select('tugas', $filters);
+                // tambahkan signed url jika ada lampiran (sama seperti pada branch mahasiswa)
+                foreach ($tugas as &$t) {
+                    if (!empty($t['lampiran_path'])) {
+                        $url = $supabase->getSignedUrl('tugas-files', $t['lampiran_path']);
+                        if ($url !== false) $t['lampiran_signed_url'] = $url;
+                    }
+                }
             } else {
                 // Mahasiswa: cari kelas yang diikuti
                 $kelasIkut = $supabase->select('kelas_mahasiswa', ['mahasiswa_id' => 'eq.' . $user['user_id']]);
@@ -123,13 +130,31 @@ class TugasController {
                 $insertData['lampiran_path'] = $lampiranPath;
                 $insertData['lampiran_name'] = $lampiranName;
             }
+
+            // Defensive: ensure columns exist in DB. If DB lacks these columns, Supabase returns 400
             
             $result = $supabase->insert('tugas', $insertData);
             error_log('TugasController::create - uploadResult: ' . var_export($uploadResult ?? null, true));
             error_log('TugasController::create - insert result: ' . var_export($result, true));
-            
+
+            // Jika insert gagal dan kita punya lampiran, coba ulang tanpa field lampiran
+            $warning = null;
+            if ($result === false && !empty($lampiranPath)) {
+                error_log('TugasController::create - insert failed with lampiran, retrying without lampiran fields');
+                $insertNoLamp = $insertData;
+                unset($insertNoLamp['lampiran_path'], $insertNoLamp['lampiran_name']);
+                $retry = $supabase->insert('tugas', $insertNoLamp);
+                error_log('TugasController::create - retry insert result: ' . var_export($retry, true));
+                if ($retry !== false) {
+                    $result = $retry;
+                    $warning = 'Lampiran berhasil diupload tetapi metadata lampiran tidak disimpan karena skema database tidak mempunyai kolom lampiran_name/lampiran_path';
+                }
+            }
+
             http_response_code(201);
-            echo json_encode(["message" => "Tugas berhasil dibuat", "data" => isset($result[0]) ? $result[0] : $result]);
+            $resp = ["message" => "Tugas berhasil dibuat", "data" => isset($result[0]) ? $result[0] : $result];
+            if ($warning) $resp['warning'] = $warning;
+            echo json_encode($resp);
             
         } catch (\Exception $e) {
             http_response_code(500);
