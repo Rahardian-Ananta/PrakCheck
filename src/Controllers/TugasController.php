@@ -109,12 +109,137 @@ class TugasController {
     }
 
     public function update(string $id): void {
-        http_response_code(501);
-        echo json_encode(["error" => "Not Implemented"]);
+        try {
+            $user = AuthMiddleware::requireRole('asprak');
+            $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+
+            $supabase = SupabaseClient::getInstance();
+
+            // Validasi tugas milik asprak
+            $tugasList = $supabase->select('tugas', ['id' => 'eq.' . $id]);
+            if (empty($tugasList)) {
+                http_response_code(404);
+                echo json_encode(["error" => "Tugas tidak ditemukan"]);
+                return;
+            }
+
+            $tugas = $tugasList[0];
+
+            // Cek kelas milik asprak
+            $kelasList = $supabase->select('kelas', [
+                'id' => 'eq.' . $tugas['kelas_id'],
+                'asprak_id' => 'eq.' . $user['user_id']
+            ]);
+
+            if (empty($kelasList)) {
+                http_response_code(403);
+                echo json_encode(["error" => "Akses ditolak, tugas ini bukan milik Anda"]);
+                return;
+            }
+
+            // Cek apakah tugas sudah dianalisis
+            if ($tugas['is_analyzed'] === true || $tugas['is_analyzed'] === 't') {
+                http_response_code(422);
+                echo json_encode(["error" => "Tugas yang sudah dianalisis tidak bisa diubah"]);
+                return;
+            }
+
+            // Siapkan data update
+            $updateData = [];
+
+            if (isset($data['nama_tugas'])) $updateData['nama_tugas'] = $data['nama_tugas'];
+            if (isset($data['deskripsi'])) $updateData['deskripsi'] = $data['deskripsi'];
+            if (isset($data['deadline'])) $updateData['deadline'] = $data['deadline'];
+            if (isset($data['format_diizinkan'])) $updateData['format_diizinkan'] = $data['format_diizinkan'];
+            if (isset($data['konvensi_nama'])) $updateData['konvensi_nama'] = $data['konvensi_nama'];
+            if (isset($data['konvensi_regex'])) $updateData['konvensi_regex'] = $data['konvensi_regex'];
+            if (isset($data['max_ukuran_mb'])) $updateData['max_ukuran_mb'] = $data['max_ukuran_mb'];
+
+            if (empty($updateData)) {
+                http_response_code(400);
+                echo json_encode(["error" => "Tidak ada data yang diupdate"]);
+                return;
+            }
+
+            $updateData['updated_at'] = date('c');
+
+            // Update tugas
+            $result = $supabase->update('tugas', $updateData, ['id' => 'eq.' . $id]);
+
+            if ($result === false) {
+                http_response_code(500);
+                echo json_encode(["error" => "Gagal mengupdate tugas"]);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                "message" => "Tugas berhasil diupdate",
+                "data" => isset($result[0]) ? $result[0] : $result
+            ]);
+
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+            error_log("TugasController::update Exception: " . $e->getMessage());
+        }
     }
 
     public function destroy(string $id): void {
-        http_response_code(501);
-        echo json_encode(["error" => "Not Implemented"]);
+        try {
+            $user = AuthMiddleware::requireRole('asprak');
+            $supabase = SupabaseClient::getInstance();
+
+            // Validasi tugas milik asprak
+            $tugasList = $supabase->select('tugas', ['id' => 'eq.' . $id]);
+            if (empty($tugasList)) {
+                http_response_code(404);
+                echo json_encode(["error" => "Tugas tidak ditemukan"]);
+                return;
+            }
+
+            $tugas = $tugasList[0];
+
+            // Cek kelas milik asprak
+            $kelasList = $supabase->select('kelas', [
+                'id' => 'eq.' . $tugas['kelas_id'],
+                'asprak_id' => 'eq.' . $user['user_id']
+            ]);
+
+            if (empty($kelasList)) {
+                http_response_code(403);
+                echo json_encode(["error" => "Akses ditolak, tugas ini bukan milik Anda"]);
+                return;
+            }
+
+            // Cek apakah ada laporan yang sudah disubmit
+            $laporanList = $supabase->select('laporan', ['tugas_id' => 'eq.' . $id]);
+
+            if (!empty($laporanList)) {
+                http_response_code(422);
+                echo json_encode([
+                    "error" => "Tugas tidak bisa dihapus karena sudah ada " . count($laporanList) . " laporan yang disubmit",
+                    "total_laporan" => count($laporanList)
+                ]);
+                return;
+            }
+
+            // Hapus tugas
+            $result = $supabase->delete('tugas', ['id' => 'eq.' . $id]);
+
+            if ($result === false) {
+                http_response_code(500);
+                echo json_encode(["error" => "Gagal menghapus tugas"]);
+                return;
+            }
+
+            http_response_code(200);
+            echo json_encode(["message" => "Tugas berhasil dihapus"]);
+
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+            error_log("TugasController::destroy Exception: " . $e->getMessage());
+        }
     }
 }

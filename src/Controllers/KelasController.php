@@ -111,30 +111,42 @@ class KelasController {
     }
 
     /**
-     * Mahasiswa bergabung ke kelas (dengan kode kelas)
+     * Mahasiswa bergabung ke kelas dengan kode kelas (bukan ID)
+     * POST /api/kelas/join dengan body: {"kode_kelas": "ALG-2025-A"}
      */
-    public function join(string $id): void {
+    public function join(string $id = null): void {
         try {
             $user = AuthMiddleware::requireRole('mahasiswa');
+            $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
             $supabase = SupabaseClient::getInstance();
 
-            // Cek kelas ada dan aktif
+            // Ambil kode_kelas dari body request
+            $kodeKelas = $data['kode_kelas'] ?? null;
+
+            if (!$kodeKelas) {
+                http_response_code(400);
+                echo json_encode(["error" => "kode_kelas wajib diisi"]);
+                return;
+            }
+
+            // Cari kelas berdasarkan kode_kelas
             $kelasList = $supabase->select('kelas', [
-                'id' => 'eq.' . $id,
+                'kode_kelas' => 'eq.' . $kodeKelas,
                 'is_active' => 'eq.true'
             ]);
 
             if (empty($kelasList)) {
                 http_response_code(404);
-                echo json_encode(["error" => "Kelas tidak ditemukan atau tidak aktif"]);
+                echo json_encode(["error" => "Kode kelas tidak ditemukan atau kelas tidak aktif"]);
                 return;
             }
 
             $kelas = $kelasList[0];
+            $kelasId = $kelas['id'];
 
             // Cek apakah sudah terdaftar
             $existing = $supabase->select('kelas_mahasiswa', [
-                'kelas_id' => 'eq.' . $id,
+                'kelas_id' => 'eq.' . $kelasId,
                 'mahasiswa_id' => 'eq.' . $user['user_id']
             ]);
 
@@ -146,7 +158,7 @@ class KelasController {
 
             // Insert ke kelas_mahasiswa
             $result = $supabase->insert('kelas_mahasiswa', [
-                'kelas_id' => $id,
+                'kelas_id' => $kelasId,
                 'mahasiswa_id' => $user['user_id']
             ]);
 
@@ -160,7 +172,7 @@ class KelasController {
             $supabase->insert('notifikasi', [
                 'user_id' => $user['user_id'],
                 'judul' => 'Berhasil Bergabung',
-                'pesan' => 'Kamu berhasil bergabung ke kelas "' . $kelas['nama_kelas'] . '"',
+                'pesan' => 'Kamu berhasil bergabung ke kelas "' . $kelas['nama_kelas'] . '" (' . $kelas['kode_kelas'] . ')',
                 'tipe' => 'pengumuman_baru'
             ]);
 

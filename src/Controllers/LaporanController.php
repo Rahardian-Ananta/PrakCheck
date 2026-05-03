@@ -285,38 +285,38 @@ class LaporanController {
     public function compare(): void {
         try {
             AuthMiddleware::requireRole('asprak');
-            
+
             $idA = $_GET['a'] ?? null;
             $idB = $_GET['b'] ?? null;
-            
+
             if (!$idA || !$idB) {
                 http_response_code(400);
                 echo json_encode(["error" => "Parameter a dan b wajib diisi"]);
                 return;
             }
-            
+
             $supabase = SupabaseClient::getInstance();
-            
+
             $lapA = $supabase->select('laporan', ['id' => 'eq.' . $idA])[0] ?? null;
             $lapB = $supabase->select('laporan', ['id' => 'eq.' . $idB])[0] ?? null;
-            
+
             if (!$lapA || !$lapB) {
                 http_response_code(404);
                 echo json_encode(["error" => "Laporan tidak ditemukan"]);
                 return;
             }
-            
+
             // Buat signed URL
             $lapA['signed_url'] = $supabase->getSignedUrl('laporan-files', $lapA['file_path']);
             $lapB['signed_url'] = $supabase->getSignedUrl('laporan-files', $lapB['file_path']);
-            
+
             // Ambil info mahasiswa
             $userA = $supabase->select('users', ['id' => 'eq.' . $lapA['mahasiswa_id']], 'nama, nrp_nip')[0] ?? null;
             $userB = $supabase->select('users', ['id' => 'eq.' . $lapB['mahasiswa_id']], 'nama, nrp_nip')[0] ?? null;
-            
+
             if ($userA) $lapA['user'] = $userA;
             if ($userB) $lapB['user'] = $userB;
-            
+
             http_response_code(200);
             echo json_encode([
                 "laporan_a" => $lapA,
@@ -325,6 +325,98 @@ class LaporanController {
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+        }
+    }
+
+    /**
+     * Membatalkan/menghapus laporan yang sudah disubmit (khusus mahasiswa)
+     * Hanya bisa dilakukan jika deadline belum lewat
+     */
+    public function cancel(string $id): void {
+        try {
+            $user = AuthMiddleware::requireRole('mahasiswa');
+            $supabase = SupabaseClient::getInstance();
+
+            // Validasi laporan milik mahasiswa
+            $laporanList = $supabase->select('laporan', [
+                'id' => 'eq.' . $id,
+                'mahasiswa_id' => 'eq.' . $user['user_id']
+            ]);
+
+            if (empty($laporanList)) {
+                http_response_code(404);
+                echo json_encode(["error" => "Laporan tidak ditemukan"]);
+                return;
+            }
+
+            $laporan = $laporanList[0];
+
+            // Cek status laporan
+            if ($laporan['status'] === 'ditolak') {
+                http_response_code(422);
+                echo json_encode(["error" => "Laporan yang ditolak tidak perlu dibatalkan"]);
+                return;
+            }
+
+            if ($laporan['status'] === 'dinilai') {
+                http_response_code(422);
+                echo json_encode(["error" => "Laporan yang sudah dinilai tidak bisa dibatalkan"]);
+                return;
+            }
+
+            // Ambil data tugas untuk cek deadline
+            $tugasList = $supabase->select('tugas', ['id' => 'eq.' . $laporan['tugas_id']]);
+            if (empty($tugasList)) {
+                http_response_code(404);
+                echo json_encode(["error" => "Tugas tidak ditemukan"]);
+                return;
+            }
+
+            $tugas = $tugasList[0];
+
+            // Cek apakah deadline sudah lewat
+            if (time() > strtotime($tugas['deadline'])) {
+                http_response_code(422);
+                echo json_encode(["error" => "Tidak bisa membatalkan laporan, deadline sudah lewat"]);
+                return;
+            }
+
+            // Cek apakah tugas sudah dianalisis
+            if ($tugas['is_analyzed'] === true || $tugas['is_analyzed'] === 't') {
+                http_response_code(422);
+                echo json_encode(["error" => "Tidak bisa membatalkan laporan, tugas sudah dianalisis"]);
+                return;
+            }
+
+            // Hapus file dari storage jika ada
+            if (!empty($laporan['file_path'])) {
+                $supabase->deleteFile('laporan-files', $laporan['file_path']);
+            }
+
+            // Hapus laporan dari database
+            $result = $supabase->delete('laporan', ['id' => 'eq.' . $id]);
+
+            if ($result === false) {
+                http_response_code(500);
+                echo json_encode(["error" => "Gagal membatalkan laporan"]);
+                return;
+            }
+
+            // Kirim notifikasi
+            $supabase->insert('notifikasi', [
+                'user_id' => $user['user_id'],
+                'judul' => 'Laporan Dibatalkan',
+                'pesan' => 'Laporan kamu untuk "' . $tugas['nama_tugas'] . '" berhasil dibatalkan. Kamu bisa mengumpulkan ulang sebelum deadline.',
+                'tipe' => 'laporan_ditolak'
+            ]);
+
+            http_response_code(200);
+            echo json_encode(["message" => "Laporan berhasil dibatalkan. Kamu bisa mengumpulkan ulang."]);
+
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+            error_log("LaporanController::cancel Exception: " . $e->getMessage());
         }
     }
 }
