@@ -681,12 +681,13 @@
                     const deadline = new Date(t.deadline);
                     const now = new Date();
                     const isClosed = deadline < now || t.status === 'closed';
-                    return `
+                     return `
                         <div class="item">
                             <div class="item-header">
                                 <div>
                                     <div class="item-title">${t.nama_tugas}</div>
                                     <div class="item-meta">Deadline: ${deadline.toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})}</div>
+                                    ${t.deskripsi ? `<div class="text-sm text-muted mt-2">${t.deskripsi}</div>` : ''}
                                 </div>
                                 <span class="badge ${isClosed ? 'badge-muted' : 'badge-primary'}">${isClosed ? 'Tutup' : 'Buka'}</span>
                             </div>
@@ -803,6 +804,7 @@
                                 <div>
                                     <div class="item-title">${t.nama_tugas}</div>
                                     <div class="item-meta">Deadline: ${deadline.toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})}</div>
+                                    ${t.deskripsi ? `<div class="text-sm text-muted mt-2">${t.deskripsi}</div>` : ''}
                                 </div>
                                 <span class="badge ${t.status === 'open' ? 'badge-primary' : 'badge-muted'}">${t.status}</span>
                             </div>

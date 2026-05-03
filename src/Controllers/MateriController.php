@@ -240,9 +240,13 @@ class MateriController {
                 return;
             }
             
-            $updateData['updated_at'] = date('c');
+            // Update dengan filter id DAN asprak_id (keamanan)
+            $filters = [
+                'id' => 'eq.' . $id,
+                'asprak_id' => 'eq.' . $user['user_id']
+            ];
             
-            $result = $supabase->update('materi', $updateData, ['id' => 'eq.' . $id]);
+            $result = $supabase->update('materi', $updateData, $filters);
             
             if ($result === false) {
                 http_response_code(500);
