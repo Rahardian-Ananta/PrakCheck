@@ -1096,12 +1096,10 @@ git push -u origin main
 1. Klik service yang baru dibuat → tab **Settings**
 2. Bagian **Build**:
    - Build Command: `composer install --no-dev --optimize-autoloader`
-3. Bagian **Deploy**:
-   - Start Command: `php -S 0.0.0.0:$PORT -t public/`
-4. Tab **Networking**:
+3. Tab **Networking**:
    - Klik **Generate Domain**
    - Catat domain, contoh: `prakcheck.up.railway.app`
-5. Tab **Variables** → klik **Raw Editor** → paste semua sekaligus:
+4. Tab **Variables** → klik **Raw Editor** → paste semua sekaligus:
 
 ```
 SUPABASE_URL=https://[project-id].supabase.co
