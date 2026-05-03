@@ -47,6 +47,18 @@ class LaporanController {
                 return;
             }
 
+            // STEP 3b — CEK existing laporan (mencegah spam upload)
+            $existingLaporan = $supabase->select('laporan', [
+                'mahasiswa_id' => 'eq.' . $mahasiswaId,
+                'tugas_id' => 'eq.' . $tugasId
+            ]);
+            $existing = $existingLaporan[0] ?? null;
+            if ($existing && in_array($existing['status'], ['diterima', 'dicancel'])) {
+                http_response_code(422);
+                echo json_encode(["error" => "Anda sudah upload untuk tugas ini. Status: " . $existing['status']]);
+                return;
+            }
+
             // STEP 4 — Validasi file (berurutan)
             
             // 4a. DEADLINE

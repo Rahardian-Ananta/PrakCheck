@@ -65,6 +65,42 @@ class TugasController {
                 return;
             }
             
+            $lampiranPath = null;
+            $lampiranName = null;
+            
+            // Handle lampiran upload (opsional)
+            if (isset($_FILES['lampiran']) && $_FILES['lampiran']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['lampiran'];
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                $mime = mime_content_type($file['tmp_name']);
+                
+                // Validasi: hanya PDF, JPG, PNG
+                if (!in_array($ext, ['pdf', 'jpg', 'jpeg', 'png'])) {
+                    http_response_code(400);
+                    echo json_encode(["error" => "Format lampiran tidak diizinkan. Hanya PDF, JPG, PNG"]);
+                    return;
+                }
+                
+                if ($file['size'] > 50 * 1024 * 1024) {
+                    http_response_code(400);
+                    echo json_encode(["error" => "Ukuran lampiran maksimal 50MB"]);
+                    return;
+                }
+                
+                $timestamp = time();
+                $storagePath = $data['kelas_id'] . '/tugas/' . $timestamp . '_' . $file['name'];
+                $uploadResult = $supabase->uploadFile('tugas-files', $storagePath, $file['tmp_name'], $mime);
+                
+                if ($uploadResult === false) {
+                    http_response_code(500);
+                    echo json_encode(["error" => "Gagal upload lampiran"]);
+                    return;
+                }
+                
+                $lampiranPath = $storagePath;
+                $lampiranName = $file['name'];
+            }
+            
             $insertData = [
                 'asprak_id' => $user['user_id'],
                 'kelas_id' => $data['kelas_id'],
@@ -76,6 +112,11 @@ class TugasController {
                 'konvensi_nama' => $data['konvensi_nama'] ?? '',
                 'status' => 'open'
             ];
+            
+            if ($lampiranPath) {
+                $insertData['lampiran_path'] = $lampiranPath;
+                $insertData['lampiran_name'] = $lampiranName;
+            }
             
             $result = $supabase->insert('tugas', $insertData);
             
@@ -240,6 +281,55 @@ class TugasController {
             http_response_code(500);
             echo json_encode(["error" => "Terjadi kesalahan sistem"]);
             error_log("TugasController::destroy Exception: " . $e->getMessage());
+        }
+    }
+
+    public function downloadLampiran(string $id): void {
+        try {
+            AuthMiddleware::check();
+            $supabase = SupabaseClient::getInstance();
+            
+            $tugasList = $supabase->select('tugas', ['id' => 'eq.' . $id]);
+            if (empty($tugasList)) {
+                http_response_code(404);
+                echo json_encode(["error" => "Tugas tidak ditemukan"]);
+                return;
+            }
+            
+            $tugas = $tugasList[0];
+            
+            if (empty($tugas['lampiran_path'])) {
+                http_response_code(404);
+                echo json_encode(["error" => "Tidak ada lampiran"]);
+                return;
+            }
+            
+            $fileContent = $supabase->downloadFile('tugas-files', $tugas['lampiran_path']);
+            if ($fileContent === false) {
+                http_response_code(500);
+                echo json_encode(["error" => "Gagal download lampiran"]);
+                return;
+            }
+            
+            // Detect MIME type dari extension
+            $ext = strtolower(pathinfo($tugas['lampiran_name'], PATHINFO_EXTENSION));
+            $mimeTypes = [
+                'pdf' => 'application/pdf',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png'
+            ];
+            $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
+            
+            header('Content-Type: ' . $mime);
+            header('Content-Disposition: attachment; filename="' . $tugas['lampiran_name'] . '"');
+            header('Content-Length: ' . strlen($fileContent));
+            echo $fileContent;
+            
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Terjadi kesalahan sistem"]);
+            error_log("TugasController::downloadLampiran Exception: " . $e->getMessage());
         }
     }
 }

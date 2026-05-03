@@ -103,6 +103,12 @@
         .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; }
         .badge-primary { background: var(--primary-light); color: var(--primary); }
         .badge-muted { background: var(--surface-2); color: var(--text-muted); }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        [data-theme="dark"] .badge-success { background: #14532d; color: #86efac; }
+        [data-theme="dark"] .badge-warning { background: #78350f; color: #fcd34d; }
+        [data-theme="dark"] .badge-danger { background: #7f1d1d; color: #fca5a5; }
         
         /* Alert */
         .alert { padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.875rem; margin-bottom: 1rem; }
@@ -402,6 +408,11 @@
                         <option value="docx">DOCX saja</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Lampiran (opsional)</label>
+                    <input type="file" id="tugas-lampiran" accept=".pdf,.jpg,.jpeg,.png">
+                    <small class="text-muted">PDF, JPG, PNG max 50MB</small>
+                </div>
                 <button type="submit" class="btn btn-primary w-full">Simpan</button>
             </form>
         </div>
@@ -671,38 +682,95 @@
             }
         };
 
-        const loadMhsTugas = async () => {
+const loadMhsTugas = async () => {
             const container = document.getElementById('mhs-sub-tugas');
-            const res = await fetch(`/api/tugas?kelas_id=${selectedClassId}`);
+            const res = await fetch(`/api/tugas`);
             const data = await res.json();
+            const tugasList = data.data || [];
             
-            if (data.data && data.data.length > 0) {
-                container.innerHTML = data.data.map(t => {
-                    const deadline = new Date(t.deadline);
-                    const now = new Date();
-                    const isClosed = deadline < now || t.status === 'closed';
-                     return `
-                        <div class="item">
-                            <div class="item-header">
-                                <div>
-                                    <div class="item-title">${t.nama_tugas}</div>
-                                    <div class="item-meta">Deadline: ${deadline.toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})}</div>
-                                    ${t.deskripsi ? `<div class="text-sm text-muted mt-2">${t.deskripsi}</div>` : ''}
-                                </div>
-                                <span class="badge ${isClosed ? 'badge-muted' : 'badge-primary'}">${isClosed ? 'Tutup' : 'Buka'}</span>
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openUpload('${t.id}','${t.nama_tugas}')" ${isClosed?'disabled':''}>
-                                    Upload
-                                </button>
-                                <button class="btn btn-sm" onclick="event.stopPropagation();cekLaporan('${t.id}')">Status</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } else {
+            // Ambil semua laporan untuk student ini
+            const laporanRes = await fetch('/api/laporan');
+            const laporanData = await laporanRes.json();
+            const myLaporan = (laporanData.data || []).reduce((acc, l) => {
+                acc[l.tugas_id] = l;
+                return acc;
+            }, {});
+            
+            if (tugasList.length === 0) {
                 container.innerHTML = '<div class="empty"><p>Belum ada tugas</p></div>';
+                return;
             }
+            
+            const now = new Date();
+            container.innerHTML = tugasList.map(t => {
+                const deadline = new Date(t.deadline);
+                const isClosed = deadline < now || t.status === 'closed';
+                const lap = myLaporan[t.id];
+                
+                let statusBadge, statusText, uploadBtn;
+                
+                // Prioritas 1: Deadline sudah lewat atau tugas ditutup
+                if (isClosed) {
+                    if (!lap) {
+                        statusBadge = 'badge-muted';
+                        statusText = 'Tutup';
+                        uploadBtn = `<button class="btn btn-sm" disabled>✓ Tutup</button>`;
+                    } else if (lap.status === 'diterima') {
+                        statusBadge = 'badge-success';
+                        statusText = `Dikumpulkan: ${lap.file_name}`;
+                        uploadBtn = `<button class="btn btn-sm" disabled>✓ Terkirim</button>`;
+                    } else if (lap.status === 'ditolak') {
+                        statusBadge = 'badge-danger';
+                        statusText = `Dikembalikan: ${lap.file_name}`;
+                        uploadBtn = `<button class="btn btn-sm" disabled>✓ Tutup</button>`;
+                    } else {
+                        statusBadge = 'badge-muted';
+                        statusText = 'Tutup';
+                        uploadBtn = `<button class="btn btn-sm" disabled>✓ Tutup</button>`;
+                    }
+                } else if (!lap) {
+                    // Prioritas 2: Belum submit dan masih buka
+                    statusBadge = 'badge-muted';
+                    statusText = 'Aktif';
+                    uploadBtn = `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openUpload('${t.id}','${t.nama_tugas}')">Upload</button>`;
+                } else if (lap.status === 'diterima') {
+                    statusBadge = 'badge-success';
+                    statusText = `Dikumpulkan: ${lap.file_name}`;
+                    uploadBtn = `<button class="btn btn-sm" disabled>✓ Terkirim</button>`;
+                } else if (lap.status === 'ditolak') {
+                    statusBadge = 'badge-danger';
+                    statusText = `Dikembalikan: ${lap.file_name}`;
+                    uploadBtn = `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation();openUpload('${t.id}','${t.nama_tugas}')">Upload Ulang</button>`;
+                } else if (lap.status === 'dicancel') {
+                    statusBadge = 'badge-muted';
+                    statusText = 'Aktif';
+                    uploadBtn = `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openUpload('${t.id}','${t.nama_tugas}')">Upload</button>`;
+                } else {
+                    statusBadge = 'badge-primary';
+                    statusText = 'Dikumpulkan';
+                    uploadBtn = `<button class="btn btn-sm" disabled>✓ Terkirim</button>`;
+                }
+                
+                const hasLampiran = t.lampiran_name ? 
+                    `<div class="mt-2"><a href="/api/tugas/${t.id}/lampiran" target="_blank" style="color:var(--primary);" onclick="event.stopPropagation();">📎 ${t.lampiran_name}</a></div>` : '';
+                
+                return `
+                    <div class="item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">${t.nama_tugas}</div>
+                                <div class="item-meta">Deadline: ${deadline.toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})}</div>
+                                ${t.deskripsi ? `<div class="text-sm text-muted mt-2">${t.deskripsi}</div>` : ''}
+                                ${hasLampiran}
+                            </div>
+                            <span class="badge ${statusBadge}">${statusText}</span>
+                        </div>
+                        <div class="item-actions">
+                            ${uploadBtn}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         };
 
         // Asprak
@@ -798,6 +866,8 @@
             if (asprakTugasList.length > 0) {
                 container.innerHTML += asprakTugasList.map(t => {
                     const deadline = new Date(t.deadline);
+                    const hasLampiran = t.lampiran_name ? 
+                        `<div class="mt-2"><span class="text-sm" style="color:var(--primary);">📎 Lampiran: ${t.lampiran_name}</span></div>` : '';
                     return `
                         <div class="item">
                             <div class="item-header">
@@ -805,6 +875,7 @@
                                     <div class="item-title">${t.nama_tugas}</div>
                                     <div class="item-meta">Deadline: ${deadline.toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})}</div>
                                     ${t.deskripsi ? `<div class="text-sm text-muted mt-2">${t.deskripsi}</div>` : ''}
+                                    ${hasLampiran}
                                 </div>
                                 <span class="badge ${t.status === 'open' ? 'badge-primary' : 'badge-muted'}">${t.status}</span>
                             </div>
@@ -913,17 +984,19 @@
 
         const createTugas = async (e) => {
             e.preventDefault();
-            const res = await fetch('/api/tugas', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    kelas_id: selectedClassId,
-                    nama_tugas: document.getElementById('tugas-nama').value,
-                    deskripsi: document.getElementById('tugas-deskripsi').value,
-                    deadline: document.getElementById('tugas-deadline').value,
-                    format_diizinkan: document.getElementById('tugas-format').value
-                })
-            });
+            const formData = new FormData();
+            formData.append('kelas_id', selectedClassId);
+            formData.append('nama_tugas', document.getElementById('tugas-nama').value);
+            formData.append('deskripsi', document.getElementById('tugas-deskripsi').value);
+            formData.append('deadline', document.getElementById('tugas-deadline').value);
+            formData.append('format_diizinkan', document.getElementById('tugas-format').value);
+            
+            const lampiranFile = document.getElementById('tugas-lampiran').files[0];
+            if (lampiranFile) {
+                formData.append('lampiran', lampiranFile);
+            }
+            
+            const res = await fetch('/api/tugas', {method:'POST', body:formData});
             if (res.ok) {
                 alert('Tugas dibuat!');
                 hideModal('modal-tugas');

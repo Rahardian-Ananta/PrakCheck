@@ -47,6 +47,7 @@ $routes = [
     ['GET',    '/api/tugas/{id}',          \App\Controllers\TugasController::class,           'show',        true,  null],
     ['PUT',    '/api/tugas/{id}',          \App\Controllers\TugasController::class,           'update',      true,  'asprak'],
     ['DELETE', '/api/tugas/{id}',          \App\Controllers\TugasController::class,           'destroy',     true,  'asprak'],
+    ['GET',    '/api/tugas/{id}/lampiran',  \App\Controllers\TugasController::class,           'downloadLampiran', true,  null],
 
     // Laporan
     ['POST',   '/api/laporan/upload',      \App\Controllers\LaporanController::class,         'upload',      true,  'mahasiswa'],
