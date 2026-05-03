@@ -47,7 +47,15 @@ class MateriController {
                     ];
                 }
 
-                $materi = $supabase->select('materi', $filters);
+            $materi = $supabase->select('materi', $filters);
+
+                // Jika ada lampiran, tambahkan signed URL untuk preview tanpa perlu melewati middleware
+                foreach ($materi as &$m) {
+                    if (!empty($m['lampiran_path'])) {
+                        $signed = $supabase->getSignedUrl('materi-files', $m['lampiran_path']);
+                        if ($signed !== false) $m['lampiran_signed_url'] = $signed;
+                    }
+                }
 
             } else {
                 // Asprak bisa lihat semua materi yang dia buat

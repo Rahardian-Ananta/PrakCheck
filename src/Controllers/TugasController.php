@@ -25,10 +25,16 @@ class TugasController {
                     $tugas = [];
                 } else {
                     $kelasIds = array_column($kelasIkut, 'kelas_id');
-                    $tugas = $supabase->select('tugas', [
+                $tugas = $supabase->select('tugas', [
                         'kelas_id' => 'in.(' . implode(',', $kelasIds) . ')',
                         'order' => 'created_at.desc'
                     ]);
+                foreach ($tugas as &$t) {
+                    if (!empty($t['lampiran_path'])) {
+                        $url = $supabase->getSignedUrl('tugas-files', $t['lampiran_path']);
+                        if ($url !== false) $t['lampiran_signed_url'] = $url;
+                    }
+                }
                 }
             }
             

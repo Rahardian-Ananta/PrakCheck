@@ -850,7 +850,8 @@ const loadMhsTugas = async () => {
             
             if (asprakPengumumanList.length > 0) {
                 container.innerHTML += asprakPengumumanList.map(p => {
-                    const lampHtml = p.lampiran_name ? renderLampiran(p.lampiran_name, `/api/materi/${p.id}/lampiran`) : '';
+                    const lampUrl = p.lampiran_signed_url ? p.lampiran_signed_url : `/api/materi/${p.id}/lampiran`;
+                    const lampHtml = p.lampiran_name ? renderLampiran(p.lampiran_name, lampUrl) : '';
                     return `
                         <div class="item">
                             <div class="item-header">
@@ -890,7 +891,8 @@ const loadMhsTugas = async () => {
             if (asprakTugasList.length > 0) {
                 container.innerHTML += asprakTugasList.map(t => {
                     const deadline = new Date(t.deadline);
-                const lampHtml = t.lampiran_name ? renderLampiran(t.lampiran_name, `/api/tugas/${t.id}/lampiran`) : '';
+                const lampUrl = t.lampiran_signed_url ? t.lampiran_signed_url : `/api/tugas/${t.id}/lampiran`;
+                const lampHtml = t.lampiran_name ? renderLampiran(t.lampiran_name, lampUrl) : '';
                     return `
                         <div class="item">
                             <div class="item-header">
